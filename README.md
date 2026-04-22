@@ -7,7 +7,14 @@ A Claude Code agent system for generating complete, Polygon-ready competitive pr
 You describe a problem idea. The `/generate-problem` skill spawns a pipeline of specialised sub-agents, each with its own fresh context, that produce every file needed to upload the problem to Codeforces Polygon.
 
 ```
-/generate-problem name: broken_keyboard, idea: ..., constraints: ..., multitest: yes
+/generate-problem
+name: broken_keyboard
+statement: ...
+solution: ...
+constraints: ...
+sample tests:
+Input: ...
+Output: ...
 ```
 
 Each agent handles one concern and writes directly to the problem folder:
@@ -59,13 +66,38 @@ polygon-problems-generator/
 
 ## Usage
 
-Open Claude Code in this directory and run:
+Open Claude Code in this directory and run `/generate-problem` with the following parameters:
+
+| Parameter | Required | Default | Description |
+|---|---|---|---|
+| `name` | yes | — | Snake_case identifier — converted to a readable title automatically, e.g. `carrot_sum` → *Carrot Sum* |
+| `statement` | yes | — | One or two sentences describing what the solver must compute |
+| `solution` | yes | — | The intended algorithmic idea / approach |
+| `constraints` | yes | — | Full constraint block, e.g. `1 ≤ t ≤ 10^4, 1 ≤ n ≤ 10^5` |
+| `multitest` | no | yes | Whether the problem has multiple test cases per file |
+| `sample tests` | yes | — | At least one sample input/output pair |
+
+**Example:**
 
 ```
-/generate-problem name: <snake_case_name>, idea: <what the solver must do>, constraints: <variable bounds>, multitest: <yes|no>
+/generate-problem
+name: carrot_sum
+statement: Count integers in [L, R] whose digit sum is prime and the number is divisible by it.
+solution: Digit DP — precompute suffix-count tables for each prime digit-sum up to 162, then process all queries offline in O(len × 10) per prime.
+constraints: 1 ≤ t ≤ 10^4, 1 ≤ L ≤ R ≤ 10^18
+sample tests:
+Input:
+3
+1 10
+12 12
+1 100
+Output:
+4
+1
+10
 ```
 
-Claude will ask for any missing details, then run the full 11-step pipeline automatically:
+Claude will stop and ask only if a required parameter is missing, then run the full 11-step pipeline automatically:
 
 1. Create problem folder from templates
 2. Generate LaTeX statement
