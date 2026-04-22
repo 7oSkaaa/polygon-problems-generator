@@ -1,18 +1,42 @@
 You are running the full problem generation pipeline for a competitive programming problem.
 
-Problem details provided by the user:
+## Expected parameters
+
+Provide all of the following when invoking this command:
+
+| Parameter | Required | Default | Description |
+|---|---|---|---|
+| `name` | yes | — | Snake_case identifier, e.g. `carrot_sum` |
+| `statement` | yes | — | One or two sentences describing what to compute |
+| `solution` | yes | — | The intended algorithmic idea / approach |
+| `constraints` | yes | — | Full constraint block, e.g. `1 ≤ t ≤ 10^4, 1 ≤ n ≤ 10^5` |
+| `multitest` | no | yes | Whether the problem has multiple test cases per file |
+| `sample tests` | yes | — | At least one sample input/output pair |
+
+Arguments provided by the user:
+
 $ARGUMENTS
 
 ---
 
-## Step 0 — Clarify before starting
+## Step 0 — Validate parameters
 
-If any of these are missing from the problem details above, ask the user before proceeding:
-- Problem name (snake_case, e.g. `broken_keyboard`)
-- Whether the problem has multiple test cases (multitest: yes/no)
-- Whether Java solution is needed (default: yes)
+Parse the arguments above and extract:
+- `name` — snake_case problem identifier
+- `statement` — short problem description
+- `solution` — intended algorithm
+- `constraints` — constraint block
+- `multitest` — yes/no (default **yes** if not provided)
+- `sample tests` — sample input and expected output
 
-Once you have all details, proceed through every step below in order.
+If `name`, `statement`, `solution`, `constraints`, or `sample tests` are missing, **stop and ask the user to supply them before proceeding**. Do not assume or invent values for these fields.
+
+Once all required parameters are confirmed, derive the human-readable title from `name`:
+- Replace every `_` with a space and capitalise each word.
+- e.g. `carrot_sum` → `Carrot Sum`, `two_sum` → `Two Sum`
+
+Use `<name>` (snake_case) for all file system paths.
+Use `<title>` (human-readable) wherever a label is needed: statement title, agent prompts.
 
 ---
 
@@ -22,13 +46,13 @@ Use Bash to create the folder structure and copy templates:
 
 ```bash
 mkdir -p problems/<name>/statement problems/<name>/solutions problems/<name>/generators
-cp templates/validator.cpp           problems/<name>/validator.cpp
-cp templates/checker.cpp             problems/<name>/checker.cpp
-cp templates/statement/raw.tex       problems/<name>/statement/raw.tex
-cp templates/statement/statement.tex problems/<name>/statement/statement.tex
-cp templates/statement/tutorial.tex  problems/<name>/statement/tutorial.tex
-cp templates/solutions/solution.cpp  problems/<name>/solutions/solution.cpp
-cp templates/solutions/solution.java problems/<name>/solutions/solution.java
+cp templates/validator.cpp            problems/<name>/validator.cpp
+cp templates/checker.cpp              problems/<name>/checker.cpp
+cp templates/statement/raw.tex        problems/<name>/statement/raw.tex
+cp templates/statement/statement.tex  problems/<name>/statement/statement.tex
+cp templates/statement/tutorial.tex   problems/<name>/statement/tutorial.tex
+cp templates/solutions/solution.cpp   problems/<name>/solutions/solution.cpp
+cp templates/solutions/solution.java  problems/<name>/solutions/solution.java
 cp templates/generators/generator.cpp problems/<name>/generators/generator.cpp
 ```
 
@@ -43,16 +67,19 @@ Agent(
   subagent_type: "statement-agent",
   prompt: "Generate a complete Polygon problem statement.
 
-Problem name: <name (human-readable title, e.g. 'Carrot Sum')>
-Problem idea: <idea>
-Constraints: <constraints>
-Multitest: <yes/no>
-<any examples or notes if provided>
+Problem name: <title>
+Problem idea: <statement param>
+Solution idea (keep hidden): <solution param>
+Constraints: <constraints param>
+Multitest: <multitest param>
+Sample tests:
+<sample tests param>
 
 IMPORTANT: The main algorithmic idea must be hidden. Describe what to compute in terms of the story and goal — never name or hint at the required algorithm, data structure, or technique. The solver must discover the key observation themselves.
 
 Return the statement in five sections: === TITLE === / === LEGEND === / === INPUT === / === OUTPUT === / === NOTES ===
-The TITLE section must contain only: \textbf{\Large <Problem Name>}"
+The TITLE section must contain only: \textbf{\Large <Problem Name>}
+The NOTES section must explain the provided sample tests."
 )
 ```
 
@@ -72,8 +99,8 @@ Agent(
 Problem statement:
 <full statement from step 2>
 
-Solution approach: <describe the intended algorithm>
-Constraints: <constraints>
+Solution approach: <solution param>
+Constraints: <constraints param>
 
 Return the tutorial in four sections: === KEY OBSERVATIONS === / === SOLUTION === / === COMPLEXITY === / === NOTES ==="
 )
@@ -93,8 +120,8 @@ Agent(
   prompt: "Generate a complete testlib.h validator.
 
 Input format: <describe from the statement>
-Constraints: <constraints>
-Multitest: <yes/no>
+Constraints: <constraints param>
+Multitest: <multitest param>
 
 Return only the C++ code."
 )
@@ -113,7 +140,7 @@ Agent(
   subagent_type: "checker-agent",
   prompt: "Should this problem use a standard Polygon checker or a custom one?
 
-Problem description: <brief description>
+Problem description: <statement param>
 Output format: <describe the expected output>
 
 Standard checkers: wcmp (tokens), ncmp (numbers), nyesno (YES/NO per test case), yesno (single YES/NO).
@@ -130,7 +157,7 @@ Agent(
   subagent_type: "checker-agent",
   prompt: "Generate a custom testlib.h checker.
 
-Problem description: <description>
+Problem description: <statement param>
 Output format: <output format>
 Why standard checkers are insufficient: <reason from recommendation>
 
@@ -181,7 +208,7 @@ Problem statement:
 Approach: <main approach from step 6>
 Language: both (cpp and java)
 Tag: ACC
-Multitest: <yes/no>
+Multitest: <multitest param>
 
 Fill in only Solve()/solve() and any helpers. Keep template structure. Return only code."
 )
@@ -207,7 +234,7 @@ Problem statement:
 Approach: <brute force approach from step 6>
 Language: cpp
 Tag: TLE
-Multitest: <yes/no>
+Multitest: <multitest param>
 
 Fill in only Solve() and any helpers. Keep template structure. Return only code."
 )
@@ -232,7 +259,7 @@ Problem statement:
 Approach: <main approach from step 6, but with a subtle bug>
 Language: cpp
 Tag: WA
-Multitest: <yes/no>
+Multitest: <multitest param>
 
 Add a subtle bug that produces wrong answers on some inputs. Fill in only Solve() and any helpers. Return only code."
 )
@@ -251,10 +278,10 @@ Agent(
   subagent_type: "generator-agent",
   prompt: "Generate a complete testlib.h test generator.
 
-Problem description: <description>
-Constraints: <constraints>
+Problem description: <statement param>
+Constraints: <constraints param>
 Input format: <input format from statement>
-Multitest: <yes/no>
+Multitest: <multitest param>
 Desired test variety: random cases, edge cases (min/max values), stress cases
 
 Include a FreeMarker script example as a comment block at the end. Return only the C++ code."
