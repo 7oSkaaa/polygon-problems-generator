@@ -1,0 +1,34 @@
+{
+  "mcpServers": {
+    "statement": {
+      "command": "python",
+      "args": ["mcps/statement_mcp.py"],
+      "cwd": "d:/Codes/Personal/Problem Generator"
+    },
+    "validator": {
+      "command": "python",
+      "args": ["mcps/validator_mcp.py"],
+      "cwd": "d:/Codes/Personal/Problem Generator"
+    },
+    "checker": {
+      "command": "python",
+      "args": ["mcps/checker_mcp.py"],
+      "cwd": "d:/Codes/Personal/Problem Generator"
+    },
+    "generator": {
+      "command": "python",
+      "args": ["mcps/generator_mcp.py"],
+      "cwd": "d:/Codes/Personal/Problem Generator"
+    },
+    "solutions": {
+      "command": "python",
+      "args": ["mcps/solutions_mcp.py"],
+      "cwd": "d:/Codes/Personal/Problem Generator"
+    },
+    "reviewer": {
+      "command": "python",
+      "args": ["mcps/reviewer_mcp.py"],
+      "cwd": "d:/Codes/Personal/Problem Generator"
+    }
+  }
+}
