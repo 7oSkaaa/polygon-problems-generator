@@ -1,90 +1,115 @@
-# Codeforces Polygon Template
+# Polygon Problems Generator
 
-Template for creating Codeforces Polygon problems with a ready-to-use single-file generator, validator, and checker based on testlib.
+A Claude Code agent system for generating complete, Polygon-ready competitive programming problems from scratch — statement, validator, checker, solutions, and test generator — all coordinated by AI agents.
+
+## How it works
+
+You describe a problem idea. The `/generate-problem` skill spawns a pipeline of specialised sub-agents, each with its own fresh context, that produce every file needed to upload the problem to Codeforces Polygon.
+
+```
+/generate-problem name: broken_keyboard, idea: ..., constraints: ..., multitest: yes
+```
+
+Each agent handles one concern and writes directly to the problem folder:
+
+| Agent | Produces |
+|---|---|
+| `statement-agent` | LaTeX statement + editorial (`statement.tex`, `tutorial.tex`) |
+| `validator-agent` | testlib.h input validator (`validator.cpp`) |
+| `checker-agent` | Standard checker recommendation or custom checker (`checker.cpp`) |
+| `solutions-agent` | ACC / TLE / WA solutions in C++ and Java |
+| `generator-agent` | testlib.h test generator + FreeMarker script (`generator.cpp`) |
+| `reviewer-agent` | Full review against all guidelines; blocks on any FAIL verdict |
+
+## Prerequisites
+
+- [Claude Code](https://claude.ai/code) CLI installed and authenticated
+- Git
 
 ## Repository layout
 
-- Generator.cpp — single-file generator with inlined helpers (numbers/arrays/strings/graphs/utils) using testlib’s rnd
-- Validator.cpp — place your input validation here (uses testlib)
-- Checker.cpp — place your custom checker here (uses testlib)
-- Solution.cpp — reference/author solution (optional)
-- input.txt, output.txt — optional local I/O for Solution.cpp
-- testlib/ — bundled testlib sources (headers, examples).
-
-## testlib
-
-Polygon provides testlib.h on the server side automatically. For local builds, use the header from this repo:
-
-- Include with: #include "testlib.h"
-- Build with: add -I testlib to your compiler flags
-- More docs in this repo: [testlib/README.md](testlib/README.md)
-
-## Build locally (macOS/Linux)
-
-Example compile commands:
-
 ```
-g++ -std=gnu++17 -O2 -Wall -Wextra -I testlib -o gen Generator.cpp
-g++ -std=gnu++17 -O2 -Wall -Wextra -I testlib -o validator Validator.cpp
-g++ -std=gnu++17 -O2 -Wall -Wextra -I testlib -o checker Checker.cpp
-```
-
-## Generator: inlined helpers you can call
-
-Namespaces available inside `Generator.cpp`:
-
-- gen_numbers: random(l, r), random_range, random_real, random_exclude, random_weighted
-- gen_arrays: random(len, l, r, unique, sorted), permutation(n), matrix, pairs, subset, partition, progressions, bit_array, shuffled, strictly_increasing/decreasing, random_with_sum
-- gen_strings: CaseType, random, palindrome, random_alphanum, random_custom, random_strings, palindromes
-- gen_graphs: tree, simple_graph, weighted_graph, directed_graph, dag, bipartite, star, cycle, complete, regular, tree_with_diameter, chain_tree
-- gen_utils: print overloads for vectors, pairs, tuples
-
-Skeleton to fill in inside `Generate_tests()`:
-
-```
-int T = opt<int>("T", 1);           // number of testcases per file
-long long sumNCap = opt<long long>("sumN", 200000LL); // optional cap for sum of n
-if (T > 1) std::cout << T << '\n';
-for (int tc = 1; tc <= T; ++tc) {
-  // write your per-test generation here
-  // e.g., int n = gen_numbers::random<int>(1, 10);
-  // auto a = gen_arrays::random<int>(n, -100, 100);
-  // std::cout << n << '\n';
-  // gen_utils::print(a);
-}
+polygon-problems-generator/
+├── .claude/
+│   ├── agents/                 ← sub-agent definitions (markdown)
+│   │   ├── orchestrator.md
+│   │   ├── statement-agent.md
+│   │   ├── validator-agent.md
+│   │   ├── checker-agent.md
+│   │   ├── solutions-agent.md
+│   │   ├── generator-agent.md
+│   │   └── reviewer-agent.md
+│   └── commands/
+│       └── generate-problem.md ← /generate-problem skill
+├── templates/                  ← base files cloned for every new problem
+│   ├── validator.cpp
+│   ├── checker.cpp
+│   ├── statement/
+│   ├── solutions/
+│   └── generators/
+├── tutorials/                  ← writing guides read by agents at runtime
+│   ├── statement.md
+│   ├── validator.md
+│   ├── checker.md
+│   └── generator.md
+├── guidelines.md               ← full 10-stage workflow + checklists
+├── problems/                   ← generated problems (gitignored)
+└── testlib/                    ← bundled testlib.h
 ```
 
-## Using generator in Polygon
+## Usage
 
-Upload `Generator.cpp` as the generator. Use a FreeMarker loop in “Generate tests” to produce multiple files. Pass the loop index as a seed (last arg is used by testlib’s registerGen for seeding), and add your optional CLI flags (like T, n, ranges):
-
-```
-<#list begin..end as s>
-  ./gen --T=1 ${s} > $
-</#list>
-```
-
-Examples:
+Open Claude Code in this directory and run:
 
 ```
-<#list 1..20 as s>
-  ./gen --T=1 --n=1000 --l=-1000000000 --r=1000000000 ${s} > $
-</#list>
+/generate-problem name: <snake_case_name>, idea: <what the solver must do>, constraints: <variable bounds>, multitest: <yes|no>
 ```
 
-If your input format requires multiple testcases in a single file, print T first and generate T tests per run (set --T accordingly) and keep one output file per run.
+Claude will ask for any missing details, then run the full 11-step pipeline automatically:
 
-## Learning resources
+1. Create problem folder from templates
+2. Generate LaTeX statement
+3. Generate LaTeX tutorial (editorial)
+4. Generate testlib.h validator
+5. Recommend or generate checker
+6. Suggest algorithmic approaches
+7. Generate ACC solution (C++ + Java)
+8. Generate TLE solution (intentionally slow)
+9. Generate WA solution (intentionally buggy)
+10. Generate test generator with FreeMarker script
+11. Full review — re-generates any component that fails
+
+Every generated problem lands in `problems/<name>/` with this structure:
+
+```
+problems/<name>/
+├── statement/
+│   ├── statement.tex   ← Polygon-ready LaTeX statement
+│   └── tutorial.tex    ← Polygon-ready LaTeX editorial
+├── solutions/
+│   ├── acc.cpp         ← correct C++ solution (ACC)
+│   ├── acc_java.java   ← correct Java solution (ACC)
+│   ├── brute.cpp       ← intentionally slow solution (TLE)
+│   └── wa.cpp          ← intentionally wrong solution (WA)
+├── generators/
+│   └── generator.cpp   ← testlib.h generator + FreeMarker script
+├── validator.cpp
+└── checker.cpp
+```
+
+## Build locally
+
+```bash
+g++ -std=c++17 -O2 -Wall -Wextra -I testlib -o validator validator.cpp
+g++ -std=c++17 -O2 -Wall -Wextra -I testlib -o checker checker.cpp
+g++ -std=c++17 -O2 -Wall -Wextra -I testlib -o gen generators/generator.cpp
+```
+
+## References
 
 - [Validators tutorial](https://codeforces.com/blog/entry/18426)
-- [Checker tutorial](https://codeforces.com/blog/entry/18431)
+- [Checkers tutorial](https://codeforces.com/blog/entry/18431)
 - [Generators tutorial](https://codeforces.com/blog/entry/18291)
-- [Interactors tutorial](https://codeforces.com/blog/entry/18455)
-- [testlib.h information](https://codeforces.com/blog/entry/18289)
+- [testlib.h overview](https://codeforces.com/blog/entry/18289)
 - [Polygon statements manual](https://polygon.codeforces.com/docs/statements-tex-manual)
 - [Polygon usage tutorial](https://quangloc99.github.io/2022/03/08/polygon-codeforces-tutorial.html)
-
-### Videos
-
-- Polygon walkthrough (part 1): https://drive.google.com/file/d/198dWogj2xSGWZxVMNtCRMqVnawgVRXLX/view?usp=sharing
-- Polygon updates (part 2): https://drive.google.com/file/d/1t5aJPvVRx-D_cuaQuQJ8WV3vh6qnbPDw/view?usp=sharing
