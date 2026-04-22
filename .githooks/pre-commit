@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Regenerate AI tool configs from .claude/ before every commit.
+# Keeps .cursor/rules/, AGENTS.md, .github/copilot-instructions.md,
+# and .windsurfrules in sync with the source of truth automatically.
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+if ! python "$REPO_ROOT/sync-ai-configs.py"; then
+  echo "⚠  sync-ai-configs.py failed — committing without regenerating AI configs." >&2
+  exit 0
+fi
+
+git add \
+  "$REPO_ROOT/.cursor/rules/" \
+  "$REPO_ROOT/.github/copilot-instructions.md" \
+  "$REPO_ROOT/AGENTS.md" \
+  "$REPO_ROOT/.windsurfrules"
