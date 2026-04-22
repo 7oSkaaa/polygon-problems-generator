@@ -32,13 +32,26 @@ Each agent handles one concern and writes directly to the problem folder:
 
 - [Claude Code](https://claude.ai/code) CLI installed and authenticated
 - Git
+- Python 3 (for `sync-ai-configs.py`)
+
+## Setup
+
+```bash
+git clone https://github.com/7oSkaaa/polygon-problems-generator.git
+cd polygon-problems-generator
+
+# Activate the pre-commit hook (one-time, per machine)
+git config core.hooksPath .githooks
+```
+
+The hook runs `sync-ai-configs.py` automatically before every commit, keeping configs for Cursor, Copilot, Codex, and Windsurf in sync with `.claude/agents/`.
 
 ## Repository layout
 
 ```
 polygon-problems-generator/
 ├── .claude/
-│   ├── agents/                 ← sub-agent definitions (markdown)
+│   ├── agents/                 ← sub-agent definitions (source of truth)
 │   │   ├── orchestrator.md
 │   │   ├── statement-agent.md
 │   │   ├── validator-agent.md
@@ -48,6 +61,14 @@ polygon-problems-generator/
 │   │   └── reviewer-agent.md
 │   └── commands/
 │       └── generate-problem.md ← /generate-problem skill
+├── .cursor/rules/              ← Cursor AI rules (auto-generated)
+├── .github/
+│   └── copilot-instructions.md ← GitHub Copilot instructions (auto-generated)
+├── .githooks/
+│   └── pre-commit              ← runs sync-ai-configs.py before every commit
+├── .windsurfrules              ← Windsurf rules (auto-generated)
+├── AGENTS.md                   ← OpenAI Codex agent definitions (auto-generated)
+├── sync-ai-configs.py          ← generates all tool configs from .claude/agents/
 ├── templates/                  ← base files cloned for every new problem
 │   ├── validator.cpp
 │   ├── checker.cpp
