@@ -21,7 +21,7 @@ Once you have all details, proceed through every step below in order.
 Use Bash to create the folder structure and copy templates:
 
 ```bash
-mkdir -p problems/<name>/{statement,solutions,generators}
+mkdir -p problems/<name>/statement problems/<name>/solutions problems/<name>/generators
 cp templates/validator.cpp           problems/<name>/validator.cpp
 cp templates/checker.cpp             problems/<name>/checker.cpp
 cp templates/statement/raw.tex       problems/<name>/statement/raw.tex
@@ -43,6 +43,7 @@ Agent(
   subagent_type: "statement-agent",
   prompt: "Generate a complete Polygon problem statement.
 
+Problem name: <name (human-readable title, e.g. 'Carrot Sum')>
 Problem idea: <idea>
 Constraints: <constraints>
 Multitest: <yes/no>
@@ -50,7 +51,8 @@ Multitest: <yes/no>
 
 IMPORTANT: The main algorithmic idea must be hidden. Describe what to compute in terms of the story and goal — never name or hint at the required algorithm, data structure, or technique. The solver must discover the key observation themselves.
 
-Return the statement in four sections: === LEGEND === / === INPUT === / === OUTPUT === / === NOTES ==="
+Return the statement in five sections: === TITLE === / === LEGEND === / === INPUT === / === OUTPUT === / === NOTES ===
+The TITLE section must contain only: \textbf{\Large <Problem Name>}"
 )
 ```
 

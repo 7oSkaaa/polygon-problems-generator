@@ -123,7 +123,47 @@ For NO cases, generate random arrays separately without the construction constra
 Polygon uses FreeMarker templates to generate many test invocations.  
 The `> $` syntax auto-assigns the next test ID.
 
+### Executable Name Rule
+
+> **The executable name in the script must exactly match the generator `.cpp` file's base name.**
+>
+> | File | Executable in script |
+> |---|---|
+> | `generator.cpp` | `generator` |
+> | `my_gen.cpp` | `my_gen` |
+> | `brute_gen.cpp` | `brute_gen` |
+>
+> Never use a generic alias like `gen` — Polygon compiles the file under its base name.
+
+Always add a comment at the top of the FreeMarker block inside the `.cpp` file to make this explicit:
+
+```cpp
+/*
+FreeMarker script example (Polygon test script):
+Executable name must match this file's base name: generator
+
+generator -t 10000 -sum-n 200000 > $
+...
+*/
+```
+
+### Syntax Reference
+
+| Syntax | Meaning |
+|---|---|
+| `<#assign x = val>` | Declare variable |
+| `<#list seq as item>` | Loop |
+| `${expr}` | Insert value |
+| `> $` | Auto-assign next test ID |
+| `> [N]` | Assign specific test ID N |
+
+### Example Script
+
+Assume the file is `generator.cpp`:
+
 ```freemarker
+<#-- Executable name: generator -->
+
 <#assign configs = [
     [10000, 5000],
     [1000,  500],
@@ -134,19 +174,11 @@ The `> $` syntax auto-assigns the next test ID.
 
 <#list configs as cfg>
     <#list valueRanges as vr>
-        gen -t ${cfg[0]} -sum-n 200000 -yes-count ${cfg[1]} \
+        generator -t ${cfg[0]} -sum-n 200000 -yes-count ${cfg[1]} \
             -min-val ${vr[0]} -max-val ${vr[1]} > $
     </#list>
 </#list>
 ```
-
-| Syntax | Meaning |
-|---|---|
-| `<#assign x = val>` | Declare variable |
-| `<#list seq as item>` | Loop |
-| `${expr}` | Insert value |
-| `> $` | Auto-assign next test ID |
-| `> [N]` | Assign specific test ID N |
 
 ---
 
@@ -219,3 +251,5 @@ gen -t 10 -sum-n 100 -min-val 1 -max-val 100 [1..50]
 - Generator must be **reproducible** — same args → same output everywhere
 - Use `rnd.partition` for distributing sums, not manual loops
 - Use `println` to avoid trailing spaces
+- FreeMarker script executable name must exactly match the `.cpp` file's base name (e.g. `generator.cpp` → `generator`); never use a generic alias like `gen`
+- Always include a comment at the top of the FreeMarker block inside the `.cpp` file: `Executable name must match this file's base name: <name>`

@@ -21,7 +21,8 @@ Read tutorials/generator.md
 - Use `println()` for output — avoids trailing spaces
 - Build problem-aware generators that construct valid, interesting cases
 - Include a FreeMarker script example as a comment block at the end
-- The FreeMarker script executable name must match the generator `.cpp` file base name
+- The FreeMarker script executable name MUST exactly match the generator `.cpp` file base name — if the file is `generator.cpp` use `generator`, if it is `my_gen.cpp` use `my_gen`. Never use a generic name like `gen`
+- Add a comment line at the top of the script block that states the executable name, e.g. `Executable name must match this file's base name: generator`
 - Add `-n`/`-k` exact-value flags so the script can hit min and max for every variable
 - Compile with cpp17, no warnings
 
