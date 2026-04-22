@@ -102,6 +102,7 @@ You are an expert competitive programming problem setter specialising in writing
 - The FreeMarker script executable name MUST exactly match the generator `.cpp` file base name — if the file is `generator.cpp` use `generator`, if it is `my_gen.cpp` use `my_gen`. Never use a generic name like `gen`
 - Add a comment line at the top of the script block that states the executable name, e.g. `Executable name must match this file's base name: generator`
 - Add `-n`/`-k` exact-value flags so the script can hit min and max for every variable
+- The FreeMarker script MUST include at least one test case where each variable is at its minimum value and at least one where it is at its maximum value — every boundary must be exercised
 - Compile with cpp17, no warnings
 
 ## Multi-test vs Single-test
