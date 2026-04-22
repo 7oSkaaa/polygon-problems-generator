@@ -1,0 +1,304 @@
+#!/usr/bin/env python3
+"""
+Sync AI tool configs from .claude/ (source of truth).
+
+Run this whenever .claude/agents/ or guidelines.md changes:
+    python sync-ai-configs.py
+
+Generates:
+    .cursor/rules/*.mdc              — Cursor AI (per-filetype rules)
+    .github/copilot-instructions.md  — GitHub Copilot
+    AGENTS.md                        — OpenAI Codex
+    .windsurfrules                   — Windsurf
+"""
+
+import re
+from pathlib import Path
+
+ROOT = Path(__file__).parent
+
+
+def read(path: Path) -> str:
+    return path.read_text(encoding="utf-8") if path.exists() else ""
+
+
+def write(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+    print(f"  wrote {path.relative_to(ROOT)}")
+
+
+def strip_frontmatter(text: str) -> tuple[dict, str]:
+    """Return (frontmatter_dict, body) splitting --- YAML frontmatter."""
+    if not text.startswith("---"):
+        return {}, text
+    end = text.index("---", 3)
+    fm_block = text[3:end].strip()
+    body = text[end + 3:].strip()
+    fm: dict = {}
+    for line in fm_block.splitlines():
+        if ":" in line:
+            k, _, v = line.partition(":")
+            fm[k.strip()] = v.strip()
+    return fm, body
+
+
+def clean_body(body: str) -> str:
+    """Strip Claude-specific 'Start by reading ...' blocks (not relevant to other tools)."""
+    return re.sub(
+        r"Start by reading[^\n]*\n+```\n[^`]+```\n*",
+        "",
+        body,
+        flags=re.DOTALL,
+    ).strip()
+
+
+# ── Read source files ─────────────────────────────────────────────────────────
+
+agents: dict[str, tuple[dict, str]] = {}
+for f in sorted((ROOT / ".claude" / "agents").glob("*.md")):
+    fm, body = strip_frontmatter(read(f))
+    agents[f.stem] = (fm, body)
+
+# ── Shared snippets ───────────────────────────────────────────────────────────
+
+AGENT_TABLE = """\
+| Agent | Role |
+|---|---|
+| `statement-agent` | LaTeX statement + editorial (`statement.tex`, `tutorial.tex`) |
+| `validator-agent` | testlib.h input validator (`validator.cpp`) |
+| `checker-agent` | Standard checker recommendation or custom checker (`checker.cpp`) |
+| `solutions-agent` | ACC / TLE / WA solutions in C++ and Java |
+| `generator-agent` | testlib.h test generator + FreeMarker script (`generator.cpp`) |
+| `reviewer-agent` | Full review; blocks on any FAIL verdict |
+"""
+
+FOLDER_LAYOUT = """\
+```
+problems/<name>/
+├── statement/
+│   ├── statement.tex   ← Polygon-ready LaTeX statement
+│   └── tutorial.tex    ← Polygon-ready LaTeX editorial
+├── solutions/
+│   ├── acc.cpp         ← correct C++ solution (ACC)
+│   ├── acc_java.java   ← correct Java solution (ACC)
+│   ├── brute.cpp       ← intentionally slow solution (TLE)
+│   └── wa.cpp          ← intentionally wrong solution (WA)
+├── generators/
+│   └── generator.cpp   ← testlib.h generator + FreeMarker script
+├── validator.cpp
+└── checker.cpp
+```
+"""
+
+CRITICAL_RULES = """\
+- Every problem lives in `problems/<name>/` — never at the repo root
+- Folder names use `snake_case`
+- No `freopen` in any solution or checker
+- No compiler warnings in any file
+- Java class name must match the file name exactly (e.g. `acc_java.java` → `public class acc_java`)
+- Standard Input/Output for all problems
+- Use `cpp17` for C++ and `java21` for Java
+- Use digit-separator constants: `100'000` not `100000`
+- All solution base names must be distinct: `acc`, `acc_java`, `brute`, `wa`
+"""
+
+
+# ── 1. Cursor (.cursor/rules/*.mdc) ──────────────────────────────────────────
+# Each .mdc has YAML frontmatter + markdown body.
+# alwaysApply:true  → always injected into context.
+# globs             → injected when a matching file is open.
+
+def mdc(description: str, body: str, always: bool = False, globs: list[str] | None = None) -> str:
+    globs_line = ""
+    if globs:
+        patterns = ", ".join(f'"{g}"' for g in globs)
+        globs_line = f"\nglobs: [{patterns}]"
+    apply = "true" if always else "false"
+    return f"---\ndescription: {description}\nalwaysApply: {apply}{globs_line}\n---\n\n{body.strip()}\n"
+
+
+cursor_rules = {
+    "00-project.mdc": mdc(
+        description="Polygon Problems Generator — project overview, folder layout, and critical rules",
+        always=True,
+        body=f"""\
+# Polygon Problems Generator
+
+AI agent system for generating complete, Polygon-ready competitive programming problems.
+
+## Agents
+
+{AGENT_TABLE}
+## Problem Folder Layout
+
+{FOLDER_LAYOUT}
+## Critical Rules
+
+{CRITICAL_RULES}""",
+    ),
+    "01-statement.mdc": mdc(
+        description="Rules for writing Polygon-ready LaTeX problem statements and tutorials",
+        globs=["**/statement*.tex", "**/tutorial*.tex", "**/raw.tex"],
+        body=clean_body(agents.get("statement-agent", ({}, ""))[1]),
+    ),
+    "02-validator.mdc": mdc(
+        description="Rules for writing testlib.h validators",
+        globs=["**/validator.cpp"],
+        body=clean_body(agents.get("validator-agent", ({}, ""))[1]),
+    ),
+    "03-checker.mdc": mdc(
+        description="Rules for recommending or writing testlib.h checkers",
+        globs=["**/checker.cpp"],
+        body=clean_body(agents.get("checker-agent", ({}, ""))[1]),
+    ),
+    "04-solutions.mdc": mdc(
+        description="Rules for writing ACC / TLE / WA competitive programming solutions",
+        globs=["**/solutions/**/*.cpp", "**/solutions/**/*.java"],
+        body=clean_body(agents.get("solutions-agent", ({}, ""))[1]),
+    ),
+    "05-generator.mdc": mdc(
+        description="Rules for writing testlib.h test generators",
+        globs=["**/generators/**/*.cpp"],
+        body=clean_body(agents.get("generator-agent", ({}, ""))[1]),
+    ),
+    "06-review.mdc": mdc(
+        description="Full problem review checklist and verdict format",
+        body=clean_body(agents.get("reviewer-agent", ({}, ""))[1]),
+    ),
+}
+
+cursor_dir = ROOT / ".cursor" / "rules"
+for filename, content in cursor_rules.items():
+    write(cursor_dir / filename, content)
+
+
+# ── 2. GitHub Copilot (.github/copilot-instructions.md) ──────────────────────
+
+copilot_md = f"""\
+# Polygon Problems Generator
+
+AI agent system for generating complete, Polygon-ready competitive programming problems from scratch — statement, validator, checker, solutions, and test generator.
+
+## Agents
+
+{AGENT_TABLE}
+## Problem Folder Layout
+
+{FOLDER_LAYOUT}
+## Critical Rules
+
+{CRITICAL_RULES}
+## LaTeX Rules (statements and tutorials)
+
+- All variables in math mode: `$n$`, `$a_i$`, `$1 \\leq i \\leq n$`
+- Use `\\leq` / `\\geq` / `\\neq` — never `<=`, `>=`, `!=`
+- Use `\\times` for multiplication — never `\\cdot`
+- Use `\\ldots` for sequences: `$a_1, a_2, \\ldots, a_n$`
+- Raw TeX only — no `\\begin{{document}}` wrapper
+- Legend: short creative story (2–4 sentences), never name the algorithm
+
+## Validator Rules
+
+- Include `testlib.h`, call `registerValidation(argc, argv)`
+- Strict whitespace/newline checks: `readSpace`, `readEoln`, `readEof`
+- Named variables in all `inf.read*()` calls
+- End with `inf.readEof()`
+
+## Checker Rules
+
+- Prefer standard checkers: `wcmp`, `ncmp`, `nyesno`, `yesno`
+- Custom checkers use the `readAns` paradigm
+- No `freopen` — never
+
+## Generator Rules
+
+- Use `opt<>()` for CLI params, `rnd.next()` / `rnd.partition()` for randomness
+- Use `println()` output — avoids trailing spaces
+- FreeMarker script in comment block at the end
+- Executable name in the script must exactly match the `.cpp` file base name
+"""
+
+write(ROOT / ".github" / "copilot-instructions.md", copilot_md)
+
+
+# ── 3. OpenAI Codex (AGENTS.md) ──────────────────────────────────────────────
+
+agents_sections = ""
+for stem, (fm, body) in agents.items():
+    desc = fm.get("description", "")
+    agents_sections += f"### `{stem}`\n\n> {desc}\n\n{clean_body(body)}\n\n---\n\n"
+
+codex_md = f"""\
+# AGENTS — Polygon Problems Generator
+
+Multi-agent pipeline for generating complete Polygon-ready competitive programming problems.
+
+## Agent Roster
+
+{AGENT_TABLE}
+## Orchestrator Workflow
+
+1. Create `problems/<name>/` from templates
+2. `statement-agent` → `statement.tex` + `tutorial.tex`
+3. `validator-agent` → `validator.cpp`
+4. `checker-agent` → `checker.cpp` (or note standard checker)
+5. `solutions-agent` → approach suggestions
+6. `solutions-agent` → `acc.cpp` + `acc_java.java`
+7. `solutions-agent` → `brute.cpp` (TLE)
+8. `solutions-agent` → `wa.cpp` (WA)
+9. `generator-agent` → `generators/generator.cpp`
+10. `reviewer-agent` → full review; re-generate any FAIL
+
+## Problem Folder Layout
+
+{FOLDER_LAYOUT}
+## Critical Rules
+
+{CRITICAL_RULES}
+## Agent Definitions
+
+{agents_sections}"""
+
+write(ROOT / "AGENTS.md", codex_md)
+
+
+# ── 4. Windsurf (.windsurfrules) ──────────────────────────────────────────────
+
+windsurf_md = f"""\
+# Polygon Problems Generator
+
+AI agent system for generating complete, Polygon-ready competitive programming problems.
+
+## Agents
+
+{AGENT_TABLE}
+## Problem Folder Layout
+
+{FOLDER_LAYOUT}
+## Critical Rules
+
+{CRITICAL_RULES}
+## LaTeX Rules
+
+- All variables in math mode: `$n$`, `$a_i$`
+- `\\leq` / `\\geq` / `\\neq` — never `<=` / `>=` / `!=`
+- `\\times` for multiplication — never `\\cdot`
+- Raw TeX only — no `\\begin{{document}}` wrapper
+- Legend: 2–4 sentence creative story, never hint at the algorithm
+
+## Validator / Checker / Generator Rules
+
+- All use `testlib.h` — always include and call the correct `register*` function
+- Validators: strict whitespace checks, end with `inf.readEof()`
+- Checkers: prefer standard (`wcmp`, `ncmp`, `nyesno`); custom checkers use `readAns`; no `freopen`
+- Generators: `opt<>()` for CLI params, `rnd.partition()` for budgets, `println()` output; FreeMarker script at end
+"""
+
+write(ROOT / ".windsurfrules", windsurf_md)
+
+print("\nDone.")
+print("  .cursor/rules/           (7 rules)")
+print("  .github/copilot-instructions.md")
+print("  AGENTS.md")
+print("  .windsurfrules")
