@@ -27,13 +27,13 @@ template < typename T = int > istream& operator >> (istream &in, vector < T > &v
     return in;
 }
 
-template < typename T = int > ostream& operator << (ostream &out, const vector < T > &v) { 
-    for (const T &x : v) out << x << ' '; 
+template < typename T = int > ostream& operator << (ostream &out, const vector < T > &v) {
+    for (const T &x : v) out << x << ' ';
     return out;
 }
 
 void Solve(){
-    
+
 }
 
 int main(){

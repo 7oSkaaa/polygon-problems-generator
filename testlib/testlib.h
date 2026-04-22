@@ -184,6 +184,8 @@ const char *latestFeatures[] = {
 #   include <exception>
 #endif
 
+#include <cstdint>
+
 #if (_WIN32 || __WIN32__ || _WIN64 || __WIN64__ || __CYGWIN__)
 #   if !defined(_MSC_VER) || _MSC_VER > 1400
 #       define NOMINMAX 1
