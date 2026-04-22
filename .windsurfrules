@@ -1,0 +1,59 @@
+# Polygon Problems Generator
+
+AI agent system for generating complete, Polygon-ready competitive programming problems.
+
+## Agents
+
+| Agent | Role |
+|---|---|
+| `statement-agent` | LaTeX statement + editorial (`statement.tex`, `tutorial.tex`) |
+| `validator-agent` | testlib.h input validator (`validator.cpp`) |
+| `checker-agent` | Standard checker recommendation or custom checker (`checker.cpp`) |
+| `solutions-agent` | ACC / TLE / WA solutions in C++ and Java |
+| `generator-agent` | testlib.h test generator + FreeMarker script (`generator.cpp`) |
+| `reviewer-agent` | Full review; blocks on any FAIL verdict |
+
+## Problem Folder Layout
+
+```
+problems/<name>/
+├── statement/
+│   ├── statement.tex   ← Polygon-ready LaTeX statement
+│   └── tutorial.tex    ← Polygon-ready LaTeX editorial
+├── solutions/
+│   ├── acc.cpp         ← correct C++ solution (ACC)
+│   ├── acc_java.java   ← correct Java solution (ACC)
+│   ├── brute.cpp       ← intentionally slow solution (TLE)
+│   └── wa.cpp          ← intentionally wrong solution (WA)
+├── generators/
+│   └── generator.cpp   ← testlib.h generator + FreeMarker script
+├── validator.cpp
+└── checker.cpp
+```
+
+## Critical Rules
+
+- Every problem lives in `problems/<name>/` — never at the repo root
+- Folder names use `snake_case`
+- No `freopen` in any solution or checker
+- No compiler warnings in any file
+- Java class name must match the file name exactly (e.g. `acc_java.java` → `public class acc_java`)
+- Standard Input/Output for all problems
+- Use `cpp17` for C++ and `java21` for Java
+- Use digit-separator constants: `100'000` not `100000`
+- All solution base names must be distinct: `acc`, `acc_java`, `brute`, `wa`
+
+## LaTeX Rules
+
+- All variables in math mode: `$n$`, `$a_i$`
+- `\leq` / `\geq` / `\neq` — never `<=` / `>=` / `!=`
+- `\times` for multiplication — never `\cdot`
+- Raw TeX only — no `\begin{document}` wrapper
+- Legend: 2–4 sentence creative story, never hint at the algorithm
+
+## Validator / Checker / Generator Rules
+
+- All use `testlib.h` — always include and call the correct `register*` function
+- Validators: strict whitespace checks, end with `inf.readEof()`
+- Checkers: prefer standard (`wcmp`, `ncmp`, `nyesno`); custom checkers use `readAns`; no `freopen`
+- Generators: `opt<>()` for CLI params, `rnd.partition()` for budgets, `println()` output; FreeMarker script at end
