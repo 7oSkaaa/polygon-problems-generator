@@ -42,7 +42,12 @@ The statement must describe **what** to compute, never **how**.
 
 ## Statement Output Format
 
+The statement file must begin with the problem title before the legend:
+
 ```
+=== TITLE ===
+\textbf{\Large <Problem Title>}
+
 === LEGEND ===
 <TeX — 2-4 sentence creative story, then the task>
 
