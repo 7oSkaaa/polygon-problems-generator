@@ -10,6 +10,7 @@ Generates:
     .github/copilot-instructions.md  — GitHub Copilot
     AGENTS.md                        — OpenAI Codex
     .windsurfrules                   — Windsurf
+    .agents/skills/<name>/SKILL.md   — Google Antigravity
 """
 
 import re
@@ -297,8 +298,22 @@ AI agent system for generating complete, Polygon-ready competitive programming p
 
 write(ROOT / ".windsurfrules", windsurf_md)
 
+
+# ── 5. Google Antigravity (.agents/skills/<name>/SKILL.md) ───────────────────
+
+def skill_md(name: str, description: str, body: str) -> str:
+    return f"---\nname: {name}\ndescription: {description}\n---\n\n{body.strip()}\n"
+
+
+skills_dir = ROOT / ".agents" / "skills"
+for stem, (fm, body) in agents.items():
+    desc = fm.get("description", "")
+    content = skill_md(stem, desc, clean_body(body))
+    write(skills_dir / stem / "SKILL.md", content)
+
 print("\nDone.")
 print("  .cursor/rules/           (7 rules)")
 print("  .github/copilot-instructions.md")
 print("  AGENTS.md")
 print("  .windsurfrules")
+print(f"  .agents/skills/          ({len(agents)} skills)")
