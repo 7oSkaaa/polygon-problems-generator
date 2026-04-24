@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Regenerate AI tool configs from .claude/ before every commit.
 # Keeps .cursor/rules/, AGENTS.md, .github/copilot-instructions.md,
-# and .windsurfrules in sync with the source of truth automatically.
+# .windsurfrules, and .agents/skills/ in sync with the source of truth automatically.
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 
@@ -14,4 +14,5 @@ git add \
   "$REPO_ROOT/.cursor/rules/" \
   "$REPO_ROOT/.github/copilot-instructions.md" \
   "$REPO_ROOT/AGENTS.md" \
-  "$REPO_ROOT/.windsurfrules"
+  "$REPO_ROOT/.windsurfrules" \
+  "$REPO_ROOT/.agents/skills/"
