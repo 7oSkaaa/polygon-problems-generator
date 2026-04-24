@@ -51,8 +51,6 @@ cp templates/checker.cpp              problems/<name>/checker.cpp
 cp templates/statement/raw.tex        problems/<name>/statement/raw.tex
 cp templates/statement/statement.tex  problems/<name>/statement/statement.tex
 cp templates/statement/tutorial.tex   problems/<name>/statement/tutorial.tex
-cp templates/solutions/solution.cpp   problems/<name>/solutions/solution.cpp
-cp templates/solutions/solution.java  problems/<name>/solutions/solution.java
 cp templates/generators/generator.cpp problems/<name>/generators/generator.cpp
 ```
 
