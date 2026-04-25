@@ -9,6 +9,7 @@ AI agent system for generating complete, Polygon-ready competitive programming p
 | `statement-agent` | LaTeX statement + editorial (`statement.tex`, `tutorial.tex`) |
 | `validator-agent` | testlib.h input validator (`validator.cpp`) |
 | `checker-agent` | Standard checker recommendation or custom checker (`checker.cpp`) |
+| `interactor-agent` | testlib.h interactor for interactive problems (`interactor.cpp`) |
 | `solutions-agent` | ACC / TLE / WA solutions in C++ and Java |
 | `generator-agent` | testlib.h test generator + FreeMarker script (`generator.cpp`) |
 | `reviewer-agent` | Full review; blocks on any FAIL verdict |

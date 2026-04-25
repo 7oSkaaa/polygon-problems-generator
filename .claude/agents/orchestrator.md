@@ -18,6 +18,7 @@ Use the Agent tool with the matching `subagent_type` — always include all rele
 | Recommend or generate checker | `checker-agent` |
 | Suggest approach or generate solution | `solutions-agent` |
 | Generate generator or stress script | `generator-agent` |
+| Generate interactor (interactive problems only) | `interactor-agent` |
 | Review component or full problem | `reviewer-agent` |
 
 Always pass: problem description, constraints, existing content (when refining), feedback, and the `multitest` flag.
@@ -29,12 +30,13 @@ Always pass: problem description, constraints, existing content (when refining),
 3. **statement-agent** — generate LaTeX tutorial → write to `problems/<name>/statement/tutorial.tex`
 4. **validator-agent** — generate validator → write to `problems/<name>/validator.cpp`
 5. **checker-agent** — recommend checker; if custom, generate → write to `problems/<name>/checker.cpp`
-6. **solutions-agent** — suggest approaches (main + brute force)
-7. **solutions-agent** — generate ACC solution → `problems/<name>/solutions/acc.cpp` (+ `acc_java.java` if Java)
-8. **solutions-agent** — generate TLE solution → `problems/<name>/solutions/brute.cpp`
-9. **solutions-agent** — generate WA solution → `problems/<name>/solutions/wa.cpp`
-10. **generator-agent** — generate test generator → `problems/<name>/generators/generator.cpp`
-11. **reviewer-agent** — review full problem; fix every FAIL verdict
+6. *(interactive only)* **interactor-agent** — generate interactor → write to `problems/<name>/interactor.cpp`
+7. **solutions-agent** — suggest approaches (main + brute force)
+8. **solutions-agent** — generate ACC solution → `problems/<name>/solutions/acc.cpp` (+ `acc_java.java` if Java)
+9. **solutions-agent** — generate TLE solution → `problems/<name>/solutions/brute.cpp`
+10. **solutions-agent** — generate WA solution → `problems/<name>/solutions/wa.cpp`
+11. **generator-agent** — generate test generator → `problems/<name>/generators/generator.cpp`
+12. **reviewer-agent** — review full problem; fix every FAIL verdict
 
 ## Creating a Problem Folder
 
@@ -62,9 +64,15 @@ cp templates/generators/generator.cpp problems/<name>/generators/generator.cpp
 | `solutions/wa.cpp` | Intentionally wrong solution (WA) |
 | `generators/generator.cpp` | Test generator |
 
-## Single vs Multi-Test
+## Single vs Multi-Test vs Interactive
 
-Determine `multitest` before generating any component — ask the user if unclear. Apply consistently to ALL sub-agents for the same problem.
+Determine `multitest` and `interactive` before generating any component — ask the user if unclear. Apply consistently to ALL sub-agents for the same problem.
+
+**Interactive problems:** `interactive: yes` means the problem requires an interactor. In this case:
+- Step 6 is active: generate `interactor.cpp` via `interactor-agent`
+- The checker is still generated/noted but is not used by Polygon for interactive problems — the interactor issues the verdict
+- The statement must include query format, flush reminder, and an interaction example
+- Solutions must flush after every output line
 
 **Multi-test:** T on first line; validator loops; generator uses `-T` and `rnd.partition`; solutions uncomment `cin >> test_cases`.
 
