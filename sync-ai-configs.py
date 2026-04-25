@@ -69,6 +69,7 @@ AGENT_TABLE = """\
 | `statement-agent` | LaTeX statement + editorial (`statement.tex`, `tutorial.tex`) |
 | `validator-agent` | testlib.h input validator (`validator.cpp`) |
 | `checker-agent` | Standard checker recommendation or custom checker (`checker.cpp`) |
+| `interactor-agent` | testlib.h interactor for interactive problems (`interactor.cpp`) |
 | `solutions-agent` | ACC / TLE / WA solutions in C++ and Java |
 | `generator-agent` | testlib.h test generator + FreeMarker script (`generator.cpp`) |
 | `reviewer-agent` | Full review; blocks on any FAIL verdict |
@@ -166,6 +167,11 @@ AI agent system for generating complete, Polygon-ready competitive programming p
     "06-review.mdc": mdc(
         description="Full problem review checklist and verdict format",
         body=clean_body(agents.get("reviewer-agent", ({}, ""))[1]),
+    ),
+    "07-interactor.mdc": mdc(
+        description="Rules for writing testlib.h interactors for interactive problems",
+        globs=["**/interactor.cpp"],
+        body=clean_body(agents.get("interactor-agent", ({}, ""))[1]),
     ),
 }
 
@@ -312,7 +318,7 @@ for stem, (fm, body) in agents.items():
     write(skills_dir / stem / "SKILL.md", content)
 
 print("\nDone.")
-print("  .cursor/rules/           (7 rules)")
+print("  .cursor/rules/           (8 rules)")
 print("  .github/copilot-instructions.md")
 print("  AGENTS.md")
 print("  .windsurfrules")

@@ -11,7 +11,8 @@ Provide all of the following when invoking this command:
 | `solution` | yes | — | The intended algorithmic idea / approach |
 | `constraints` | yes | — | Full constraint block, e.g. `1 ≤ t ≤ 10^4, 1 ≤ n ≤ 10^5` |
 | `multitest` | no | yes | Whether the problem has multiple test cases per file |
-| `sample tests` | yes | — | At least one sample input/output pair |
+| `interactive` | no | no | Whether the problem is interactive (requires an interactor) |
+| `sample tests` | yes | — | At least one sample input/output pair (for interactive: show the interaction) |
 
 Arguments provided by the user:
 
@@ -27,7 +28,8 @@ Parse the arguments above and extract:
 - `solution` — intended algorithm
 - `constraints` — constraint block
 - `multitest` — yes/no (default **yes** if not provided)
-- `sample tests` — sample input and expected output
+- `interactive` — yes/no (default **no** if not provided)
+- `sample tests` — sample input and expected output (for interactive problems: full interaction example)
 
 If `name`, `statement`, `solution`, `constraints`, or `sample tests` are missing, **stop and ask the user to supply them before proceeding**. Do not assume or invent values for these fields.
 
@@ -52,6 +54,8 @@ cp templates/statement/raw.tex        problems/<name>/statement/raw.tex
 cp templates/statement/statement.tex  problems/<name>/statement/statement.tex
 cp templates/statement/tutorial.tex   problems/<name>/statement/tutorial.tex
 cp templates/generators/generator.cpp problems/<name>/generators/generator.cpp
+# Only if interactive=yes:
+# cp templates/interactor.cpp         problems/<name>/interactor.cpp
 ```
 
 ---
@@ -164,6 +168,31 @@ Return only the C++ code."
 ```
 
 Write the returned content to `problems/<name>/checker.cpp`.
+
+---
+
+## Step 5b — Generate interactor (interactive problems only)
+
+Skip this step if `interactive` is **no**.
+
+Spawn a fresh sub-agent:
+
+```
+Agent(
+  subagent_type: "interactor-agent",
+  prompt: "Generate a complete testlib.h interactor.
+
+Problem description: <statement param>
+Constraints: <constraints param>
+Query format: <describe the query/answer protocol from the statement>
+Multitest: <multitest param>
+Query limit: <from constraints>
+
+Return only the C++ interactor code."
+)
+```
+
+Write the returned content to `problems/<name>/interactor.cpp`.
 
 ---
 
