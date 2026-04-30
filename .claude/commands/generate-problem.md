@@ -40,6 +40,15 @@ Once all required parameters are confirmed, derive the human-readable title from
 Use `<name>` (snake_case) for all file system paths.
 Use `<title>` (human-readable) wherever a label is needed: statement title, agent prompts.
 
+Before generating files, read:
+
+```text
+guidelines.md
+tutorials/polygon-hints.md
+```
+
+Apply `tutorials/polygon-hints.md` throughout the pipeline, especially for statement/tutorial wording, multiple-testcase phrasing, Polygon-safe TeX, validators, checker choice, generators, and stresses.
+
 ---
 
 ## Step 1 — Create problem folder
@@ -78,6 +87,7 @@ Sample tests:
 <sample tests param>
 
 IMPORTANT: The main algorithmic idea must be hidden. Describe what to compute in terms of the story and goal — never name or hint at the required algorithm, data structure, or technique. The solver must discover the key observation themselves.
+IMPORTANT: Apply tutorials/polygon-hints.md as a checklist. Use consistent multiple-testcase wording, prefer 'output' over 'print', keep definitions in logical order, and ensure all TeX is Polygon-renderable.
 
 Return the statement in five sections: === TITLE === / === LEGEND === / === INPUT === / === OUTPUT === / === NOTES ===
 The TITLE section must contain only: \textbf{\Large <Problem Name>}
@@ -104,6 +114,8 @@ Problem statement:
 Solution approach: <solution param>
 Constraints: <constraints param>
 
+Apply tutorials/polygon-hints.md. Keep TeX renderable by Polygon and use consistent terminology from the statement.
+
 Return the tutorial in four sections: === KEY OBSERVATIONS === / === SOLUTION === / === COMPLEXITY === / === NOTES ==="
 )
 ```
@@ -124,6 +136,8 @@ Agent(
 Input format: <describe from the statement>
 Constraints: <constraints param>
 Multitest: <multitest param>
+
+Apply validator guidance from tutorials/polygon-hints.md, including immediate checks for sum constraints after reading each test case.
 
 Return only the C++ code."
 )
@@ -146,6 +160,7 @@ Problem description: <statement param>
 Output format: <describe the expected output>
 
 Standard checkers: wcmp (tokens), ncmp (numbers), nyesno (YES/NO per test case), yesno (single YES/NO).
+Apply checker guidance from tutorials/polygon-hints.md. Prefer a standard checker whenever it is sufficient.
 
 Respond with RECOMMENDATION and REASON."
 )
@@ -310,6 +325,8 @@ Constraints: <constraints param>
 Input format: <input format from statement>
 Multitest: <multitest param>
 Desired test variety: random cases, edge cases (min/max values), stress cases
+
+Apply generator guidance from tutorials/polygon-hints.md, including edge/random/adversarial/max-IO coverage and a useful FreeMarker script.
 
 Include a FreeMarker script example as a comment block at the end. Return only the C++ code."
 )
