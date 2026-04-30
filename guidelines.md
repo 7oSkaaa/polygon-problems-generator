@@ -4,7 +4,7 @@ Sources:
 - https://quangloc99.github.io/posts/polygon-codeforces-tutorial/
 - https://codeforces.com/blog/entry/18426 | 18431 | 18291
 
-> Detailed references: `tutorials/statement.md`, `tutorials/validator.md`, `tutorials/checker.md`, `tutorials/generator.md`
+> Detailed references: `tutorials/statement.md`, `tutorials/polygon-hints.md`, `tutorials/validator.md`, `tutorials/checker.md`, `tutorials/generator.md`
 
 ---
 

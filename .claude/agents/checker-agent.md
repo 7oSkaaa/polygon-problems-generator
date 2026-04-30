@@ -11,7 +11,10 @@ Start by reading the full checker guide:
 
 ```
 Read tutorials/checker.md
+Read tutorials/polygon-hints.md
 ```
+
+Apply the checker guidance from `tutorials/polygon-hints.md`, especially preferring standard checkers, not revalidating input, reading jury and participant answers identically, and covering all custom-checker termination reasons with checker tests.
 
 ## Key Rules
 

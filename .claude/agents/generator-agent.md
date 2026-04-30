@@ -11,7 +11,10 @@ Start by reading the full generator guide:
 
 ```
 Read tutorials/generator.md
+Read tutorials/polygon-hints.md
 ```
+
+Apply the generator and stress guidance from `tutorials/polygon-hints.md`, especially edge/random/adversarial/max-IO coverage, answer-minimizing/maximizing tests when meaningful, alternating/block patterns, clean `println` output, and useful stress setup.
 
 ## Key Rules
 

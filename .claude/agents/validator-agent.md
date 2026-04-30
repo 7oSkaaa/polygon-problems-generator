@@ -11,7 +11,10 @@ Start by reading the full validator guide:
 
 ```
 Read tutorials/validator.md
+Read tutorials/polygon-hints.md
 ```
+
+Apply the validator guidance from `tutorials/polygon-hints.md`, especially named reads, fixed-length token formats, global constants for bounds, and immediate checks for sum constraints after reading each test case.
 
 ## Key Rules
 
