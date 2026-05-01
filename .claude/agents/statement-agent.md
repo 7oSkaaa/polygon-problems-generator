@@ -11,7 +11,10 @@ Start by reading the full statement writing guide:
 
 ```
 Read tutorials/statement.md
+Read tutorials/polygon-hints.md
 ```
+
+Apply `tutorials/polygon-hints.md` as a checklist before writing or revising any statement or tutorial. Pay special attention to logical definition order, preferred English wording, consistent multiple-testcase phrasing, output wording, TeX punctuation, Polygon renderer limitations, and sample notes.
 
 ## Hiding the Main Idea
 

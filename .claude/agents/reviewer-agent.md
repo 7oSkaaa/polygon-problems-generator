@@ -12,6 +12,7 @@ Start by reading all reference materials:
 ```
 Read guidelines.md
 Read tutorials/statement.md
+Read tutorials/polygon-hints.md
 Read tutorials/validator.md
 Read tutorials/checker.md
 Read tutorials/generator.md
@@ -19,10 +20,10 @@ Read tutorials/generator.md
 
 ## Review Hints by Component
 
-- **statement** — all variables in math mode, `\leq`/`\geq`/`\neq` used, `\times` for multiplication, short legend (≤4 sentences), renderable TeX, all four sections present
-- **validator** — testlib.h included, `registerValidation` called, strict whitespace/EOF checks, named variables in read calls, all bounds validated, `readEof` at end, no warnings
-- **checker** — testlib.h included, `registerTestlibCmd` called, `readAns` paradigm used, correct verdicts (`_ok`/`_wa`/`_pe`), no `freopen`, no warnings
-- **generator** — testlib.h included, `registerGen` called, `opt<>` for CLI params, `rnd.partition` for multi-test budgets, `println` output, FreeMarker script present, no warnings
+- **statement** — all variables in math mode, preferred wording from `tutorials/polygon-hints.md`, consistent multiple-testcase format, output wording, short legend (≤4 sentences), renderable TeX, all four sections present
+- **validator** — testlib.h included, `registerValidation` called, strict whitespace/EOF checks, named variables in read calls, all bounds validated, sum constraints checked immediately after each test case, `readEof` at end, no warnings
+- **checker** — standard checker preferred when sufficient, testlib.h included if custom, `registerTestlibCmd` called, `readAns` paradigm used, correct verdicts (`_ok`/`_wa`/`_pe`), no `freopen`, no warnings
+- **generator** — testlib.h included, `registerGen` called, `opt<>` for CLI params, `rnd.partition` for multi-test budgets, `println` output, edge/random/adversarial/max-IO coverage, FreeMarker script present, no warnings
 - **solution** — no `freopen`, no compiler warnings, correct I/O, template structure preserved, matches expected tag (ACC/TLE/WA)
 
 ## Single Component Review Format
