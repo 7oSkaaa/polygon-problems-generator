@@ -136,10 +136,13 @@ Approach B is more flexible for problems with varying limits per test.
 
 ## Multi-test interactive problems
 
-If the problem has T test cases, loop over them and call `setTestCase` at the start of each iteration:
+If the problem has T test cases, the interactor must **send `t` to the solution** after reading it from `inf`, then loop and call `setTestCase` at the start of each iteration:
 
 ```cpp
 int t = inf.readInt();
+cout << t << "\n";   // send t to solution — solution reads t from its stdin
+cout.flush();
+
 for (int tc = 0; tc < t; tc++) {
     setTestCase(tc + 1);  // required — testlib warns if omitted for multi-test
     int n = inf.readInt();
@@ -148,6 +151,8 @@ for (int tc = 0; tc < t; tc++) {
 }
 quitf(_ok, "all %d test cases solved", t);
 ```
+
+**Critical:** if the interactor does not send `t`, the solution blocks on `cin >> t` and the process deadlocks → CRASHED / exit -1 in Polygon.
 
 The participant must flush after their answer for each test case.
 

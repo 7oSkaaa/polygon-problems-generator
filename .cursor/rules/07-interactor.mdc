@@ -28,7 +28,11 @@ You are an expert competitive programming problem setter specialising in writing
 
 ## Multi-test
 
-If the problem has T test cases, loop T times in the interactor — one full interaction per test case. Call `setTestCase(tc + 1)` as the first line inside each loop iteration (testlib warns if omitted). After processing all T test cases issue a single `quitf(_ok, ...)`.
+If the problem has T test cases:
+1. Read `t` from `inf`
+2. **Immediately send `t` to the solution** via `cout << t << "\n"; cout.flush();` — the solution reads `t` from its stdin; if the interactor skips this the solution blocks and Polygon reports CRASHED / exit -1
+3. Loop T times, calling `setTestCase(tc + 1)` as the first line of each iteration (testlib warns if omitted)
+4. After all T test cases issue a single `quitf(_ok, ...)`
 
 ## Output
 
