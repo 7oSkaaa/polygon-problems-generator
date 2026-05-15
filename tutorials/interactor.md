@@ -197,11 +197,14 @@ Example statement note:
 
 ## Common mistakes
 
-| Mistake | Fix |
-|---------|-----|
-| Not flushing after each response | Add `cout.flush()` or use `endl` |
-| Reading participant output from `cin` | Use `ouf.readInt()` / `ouf.readToken()` |
-| Using `quitf(_ok, ...)` before reading the final answer | Always read and validate the answer first |
-| Forgetting to handle EOF (participant exits early) | `ouf.readToken()` will produce PE automatically |
-| Using `_fail` for participant mistakes | Use `_wa` or `_pe` for participant errors; `_fail` is for judge bugs |
-| Interactor crashes on bad input | Use `ouf.read*()` with range — it handles bad input gracefully |
+| Mistake | Symptom | Fix |
+|---------|---------|-----|
+| Not flushing after each response | Solution hangs / TLE | Add `cout.flush()` or use `endl` |
+| Reading participant output from `cin` | Wrong values / UB | Use `ouf.readInt()` / `ouf.readToken()` |
+| **Multi-test: not sending `t` to solution** | **CRASHED / exit -1 in Polygon** | **After `int t = inf.readInt();` add `cout << t << "\n"; cout.flush();`** |
+| Not calling `setTestCase(tc+1)` per test | testlib warning | Add as first line inside each test-case loop iteration |
+| Using `quitf(_ok, ...)` before reading the final answer | Wrong verdict | Always read and validate the answer first |
+| Forgetting to handle EOF (participant exits early) | Crash | `ouf.readToken()` will produce PE automatically |
+| Using `_fail` for participant mistakes | Misleading verdict | Use `_wa` or `_pe` for participant errors; `_fail` is for judge bugs |
+| Interactor crashes on bad input | Crash / no verdict | Use `ouf.read*()` with range — it handles bad input gracefully |
+| `registerInteraction(argc, argv, inf)` — wrong signature | Compile error | Use `registerInteraction(argc, argv)` (no third argument) |

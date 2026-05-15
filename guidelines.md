@@ -269,3 +269,18 @@ Uses `testlib.h` — validates every test satisfies problem constraints before u
 - Use digit-separator constants in C++: `100'000` not `100000`, `10'000` not `10000`
 - Every new problem lives in `problems/<name>/` — never at the repo root
 - Solution files: `acc.cpp`, `acc_java.java`, `brute.cpp`, `wa.cpp` (no `solution_` prefix)
+
+## Interactive Problem Rules
+
+- `registerInteraction(argc, argv)` — no third argument
+- Multi-test interactor **must send `t` to solution** immediately after reading it from `inf`:
+  ```cpp
+  int t = inf.readInt();
+  cout << t << "\n";
+  cout.flush();
+  ```
+  Skipping this → solution blocks on `cin >> t` → Polygon reports **CRASHED / exit -1**
+- Call `setTestCase(tc + 1)` as first line of each test-case loop iteration
+- Every `cout` response must be followed by `cout.flush()`
+- Read participant output via `ouf.read*()` — never `cin`
+- Use `_wa`/`_pe` for participant errors; `_fail` only for judge/interactor bugs
