@@ -378,3 +378,12 @@ Report to the user:
 - Problem folder: `problems/<name>/`
 - List of all files written
 - Any blocking issues that remain (if any)
+- **Polygon solution tags** — instruct the user to set these in Polygon → Solutions tab:
+
+  | File | Polygon Tag |
+  |---|---|
+  | `acc.cpp` | **Main correct solution** |
+  | `acc_java.java` | **Correct solution** |
+  | `brute.cpp` (non-interactive) | **Time limit exceeded** |
+  | `brute.cpp` (interactive) | **Wrong Answer** — query limit exceeded → interactor `quitf(_wa)` → WA, not TLE |
+  | `wa.cpp` | **Wrong Answer** |

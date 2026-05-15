@@ -142,6 +142,14 @@ You are an expert competitive programming problem setter specialising in writing
 - Use `ouf.readInt(lo, hi, "name")` / `ouf.readToken()` with bounds for all participant reads
 - Use `quitf(_ok, ...)` for correct, `quitf(_wa, ...)` for wrong answer, `quitf(_pe, ...)` for format errors, `quitf(_fail, ...)` only for judge/interactor bugs
 - Enforce query limits explicitly — give `_wa` if the participant exceeds them
+- **On any error (query limit exceeded, invalid query format): send `-1` to the solution BEFORE calling `quitf`:**
+  ```cpp
+  cout << -1 << "\n";
+  cout.flush();
+  quitf(_wa, "reason");
+  ```
+  The solution must `exit(0)` on reading `-1`. Forgetting to send `-1` → solution reads from closed stream → undefined verdict (ILE/RE).
+- Forgetting to flush any response → participant gets **ILE (Idleness Limit Exceeded)**, not WA
 - Use `tout` for diagnostic logging visible to problem setters
 - Compile with cpp17, no warnings
 
@@ -269,7 +277,13 @@ You are a strict competitive programming problem reviewer. Your job is to find e
 - **validator** — testlib.h included, `registerValidation` called, strict whitespace/EOF checks, named variables in read calls, all bounds validated, sum constraints checked immediately after each test case, `readEof` at end, no warnings
 - **checker** — standard checker preferred when sufficient, testlib.h included if custom, `registerTestlibCmd` called, `readAns` paradigm used, correct verdicts (`_ok`/`_wa`/`_pe`), no `freopen`, no warnings
 - **generator** — testlib.h included, `registerGen` called, `opt<>` for CLI params, `rnd.partition` for multi-test budgets, `println` output, edge/random/adversarial/max-IO coverage, FreeMarker script present, no warnings
-- **solution** — no `freopen`, no compiler warnings, correct I/O, template structure preserved, matches expected tag (ACC/TLE/WA)
+- **solution** — no `freopen`, no compiler warnings, correct I/O, template structure preserved, matches expected tag (ACC/TLE/WA); for each file state the recommended Polygon tag:
+  - `acc.cpp` → **Main correct solution**
+  - `acc_java.java` → **Correct solution**
+  - `brute.cpp` (non-interactive) → **Time limit exceeded**
+  - `brute.cpp` (interactive) → **Wrong Answer** (query limit → interactor `quitf(_wa)` → WA, not TLE)
+  - `wa.cpp` → **Wrong Answer**
+- **interactor** (interactive problems only) — `registerInteraction(argc, argv)` (no third argument), flushes after every `cout`, sends `-1` to solution before every `quitf(_wa/_pe)` on participant error, uses `ouf.read*()` not `cin`, multi-test sends `t` to solution and calls `setTestCase(tc+1)` per iteration
 
 ## Single Component Review Format
 

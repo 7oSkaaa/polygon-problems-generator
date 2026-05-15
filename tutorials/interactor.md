@@ -199,12 +199,27 @@ Example statement note:
 
 | Mistake | Symptom | Fix |
 |---------|---------|-----|
-| Not flushing after each response | Solution hangs / TLE | Add `cout.flush()` or use `endl` |
+| Not flushing after each response | Solution hangs / ILE (Idleness Limit Exceeded) | Add `cout.flush()` or use `endl` |
 | Reading participant output from `cin` | Wrong values / UB | Use `ouf.readInt()` / `ouf.readToken()` |
 | **Multi-test: not sending `t` to solution** | **CRASHED / exit -1 in Polygon** | **After `int t = inf.readInt();` add `cout << t << "\n"; cout.flush();`** |
 | Not calling `setTestCase(tc+1)` per test | testlib warning | Add as first line inside each test-case loop iteration |
+| Not sending `-1` before `quitf` on error | Solution reads garbage / hangs | Before every `quitf(_wa/_pe)` on bad query: `cout << -1 << "\n"; cout.flush();` |
 | Using `quitf(_ok, ...)` before reading the final answer | Wrong verdict | Always read and validate the answer first |
 | Forgetting to handle EOF (participant exits early) | Crash | `ouf.readToken()` will produce PE automatically |
 | Using `_fail` for participant mistakes | Misleading verdict | Use `_wa` or `_pe` for participant errors; `_fail` is for judge bugs |
 | Interactor crashes on bad input | Crash / no verdict | Use `ouf.read*()` with range — it handles bad input gracefully |
 | `registerInteraction(argc, argv, inf)` — wrong signature | Compile error | Use `registerInteraction(argc, argv)` (no third argument) |
+
+## Error signaling convention (-1)
+
+When the interactor detects an error (query limit exceeded, invalid query format), it must **send `-1` to the solution before calling `quitf`**:
+
+```cpp
+cout << -1 << "\n";
+cout.flush();
+quitf(_wa, "reason");
+```
+
+The solution must call `exit(0)` upon reading `-1`. If it ignores `-1` and keeps reading from a closed stream, it may get undefined verdicts (ILE, RE, etc.) instead of a clean WA.
+
+Forgetting to flush after any response → participant gets **ILE (Idleness Limit Exceeded)**, not WA.
