@@ -15,7 +15,7 @@ Read tutorials/interactor.md
 
 ## Key Rules
 
-- Always include `#include "testlib.h"` and `registerInteraction(argc, argv, inf)`
+- Always include `#include "testlib.h"` and `registerInteraction(argc, argv)` (no third argument)
 - Read test data from `inf`, participant output from `ouf` — never from `cin`
 - Write responses to participant via `cout` followed immediately by `cout.flush()` — never skip the flush
 - Use `ouf.readInt(lo, hi, "name")` / `ouf.readToken()` with bounds for all participant reads
@@ -35,7 +35,7 @@ Read tutorials/interactor.md
 
 ## Multi-test
 
-If the problem has T test cases, loop T times in the interactor — one full interaction per test case. After processing all T test cases issue a single `quitf(_ok, ...)`.
+If the problem has T test cases, loop T times in the interactor — one full interaction per test case. Call `setTestCase(tc + 1)` as the first line inside each loop iteration (testlib warns if omitted). After processing all T test cases issue a single `quitf(_ok, ...)`.
 
 ## Output
 

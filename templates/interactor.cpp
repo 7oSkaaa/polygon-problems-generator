@@ -2,7 +2,7 @@
 using namespace std;
 
 int main(int argc, char* argv[]) {
-    registerInteraction(argc, argv, inf);
+    registerInteraction(argc, argv);
 
     // Read test input (secret values, limits, etc.)
     int n = inf.readInt();

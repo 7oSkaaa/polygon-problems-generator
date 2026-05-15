@@ -15,7 +15,7 @@ Examples: binary search problems where you can ask "is X > Y?", guessing games, 
 using namespace std;
 
 int main(int argc, char* argv[]) {
-    registerInteraction(argc, argv, inf);
+    registerInteraction(argc, argv);
     // ...
 }
 ```
@@ -75,7 +75,7 @@ If `ouf.read*()` fails (out of range, wrong type), testlib automatically gives W
 using namespace std;
 
 int main(int argc, char* argv[]) {
-    registerInteraction(argc, argv, inf);
+    registerInteraction(argc, argv);
 
     // 1. Read test data
     int n = inf.readInt();
@@ -136,11 +136,12 @@ Approach B is more flexible for problems with varying limits per test.
 
 ## Multi-test interactive problems
 
-If the problem has T test cases, loop over them:
+If the problem has T test cases, loop over them and call `setTestCase` at the start of each iteration:
 
 ```cpp
 int t = inf.readInt();
 for (int tc = 0; tc < t; tc++) {
+    setTestCase(tc + 1);  // required — testlib warns if omitted for multi-test
     int n = inf.readInt();
     // ... one full interaction per test case
     // After each test: participant outputs "!", interactor reads it and continues
