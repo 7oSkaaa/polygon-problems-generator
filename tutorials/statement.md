@@ -10,14 +10,57 @@ Sources:
 
 Every statement has these sections in Polygon:
 
-| Section | Purpose |
-|---|---|
-| **Legend** | Problem description / story |
-| **Input** | Input format with all constraints |
-| **Output** | Expected output format |
-| **Notes** | Explanations for examples, edge case clarifications |
+| Section | Required | Purpose |
+|---|---|---|
+| **Legend** | always | Problem description / story |
+| **Input** | always | Input format with all constraints |
+| **Interaction** | interactive only | Per-round query/response protocol + flush reminder |
+| **Output** | always | Expected output format (for interactive: final answer format) |
+| **Notes** | always | Explanations for examples, edge case clarifications |
 
 Example tests are pulled directly from the actual test cases — mark them with "Use in statements" in the Tests page.
+
+---
+
+## Interactive Problems — Interaction Section
+
+For interactive problems, add a dedicated **Interaction** section between Input and Output. This is standard CF style (see e.g. CF 897D "Ithea Plays With Chtholly").
+
+The Interaction section must cover:
+1. **What the participant reads** each round — judge message format
+2. **What the participant outputs** each round — query format
+3. **Flush reminder** — explicit, with language examples
+4. **Termination** — when to stop / when to print final answer
+
+Also add a note at the top of the legend: `\textit{This is an interactive problem. Refer to the Interaction section below for better understanding.}`
+
+### Flush reminder template (copy verbatim)
+
+```latex
+\textbf{After printing each line, flush the output.} For example:
+\begin{itemize}
+    \item \texttt{cout << endl} or \texttt{fflush(stdout)} in C++;
+    \item \texttt{System.out.flush()} in Java;
+    \item \texttt{sys.stdout.flush()} in Python.
+\end{itemize}
+```
+
+### Sample interaction table (in Notes section)
+
+```latex
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Participant} & \textbf{Judge} \\
+\hline
+ & \texttt{<first judge message>} \\
+\texttt{<participant query>} & \\
+ & \texttt{<judge response>} \\
+\texttt{! answer} & \\
+\hline
+\end{tabular}
+\end{center}
+```
 
 ---
 

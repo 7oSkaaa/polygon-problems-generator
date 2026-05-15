@@ -89,9 +89,10 @@ Sample tests:
 IMPORTANT: The main algorithmic idea must be hidden. Describe what to compute in terms of the story and goal — never name or hint at the required algorithm, data structure, or technique. The solver must discover the key observation themselves.
 IMPORTANT: Apply tutorials/polygon-hints.md as a checklist. Use consistent multiple-testcase wording, prefer 'output' over 'print', keep definitions in logical order, and ensure all TeX is Polygon-renderable.
 
-Return the statement in five sections: === TITLE === / === LEGEND === / === INPUT === / === OUTPUT === / === NOTES ===
+Return the statement in sections: === TITLE === / === LEGEND === / === INPUT === / [=== INTERACTION === if interactive] / === OUTPUT === / === NOTES ===
 The TITLE section must contain only: \textbf{\Large <Problem Name>}
-The NOTES section must explain the provided sample tests."
+For interactive problems: add === INTERACTION === between INPUT and OUTPUT. It must describe the per-round protocol, include the flush reminder (cout << endl / System.out.flush() / sys.stdout.flush()), and state the termination condition. Also add \textit{This is an interactive problem. Refer to the Interaction section below for better understanding.} at the start of the LEGEND.
+The NOTES section must explain the provided sample tests. For interactive problems include a two-column tabular (Participant | Judge) showing the sample interaction."
 )
 ```
 

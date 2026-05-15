@@ -49,11 +49,57 @@ The statement file must begin with the problem title before the legend:
 === INPUT ===
 <TeX for the input section>
 
+=== INTERACTION ===   ← ONLY for interactive problems; OMIT entirely for non-interactive
+<TeX describing the per-round query/response protocol>
+Must include:
+- What the participant reads each round (judge's message format)
+- What the participant outputs each round (query format)
+- Flush reminder with examples: cout << endl or fflush(stdout) in C++, System.out.flush() in Java, sys.stdout.flush() in Python
+- Termination condition (when to stop reading / print final answer)
+
 === OUTPUT ===
 <TeX for the output section>
+For interactive problems: describe the final answer format (e.g. "! x") here if not already covered in Interaction.
 
 === NOTES ===
 <TeX for the notes section>
+For interactive problems: include a sample interaction table showing participant ↔ judge turns.
+```
+
+### Interactive problem Interaction section template
+
+```latex
+\textit{This is an interactive problem. Refer to the Interaction section below for better understanding.}
+
+...then in === INTERACTION ===:
+
+In each step, read one line containing <describe what judge sends>. Then output <describe participant's response format> and flush the output immediately.
+
+\textbf{After printing each line, flush the output.} For example:
+\begin{itemize}
+    \item \texttt{cout << endl} or \texttt{fflush(stdout)} in C++;
+    \item \texttt{System.out.flush()} in Java;
+    \item \texttt{sys.stdout.flush()} in Python.
+\end{itemize}
+
+<Termination: when the judge sends X, print "! answer" and terminate.>
+```
+
+### Interactive sample interaction table (in NOTES)
+
+```latex
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Participant} & \textbf{Judge} \\
+\hline
+ & \texttt{<first judge message>} \\
+\texttt{<participant query>} & \\
+ & \texttt{<judge response>} \\
+\texttt{! answer} & \\
+\hline
+\end{tabular}
+\end{center}
 ```
 
 ## Tutorial Output Format
