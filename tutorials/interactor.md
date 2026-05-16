@@ -167,13 +167,26 @@ quitf(_points, score, "solved %d/%d", correctAnswers, total);
 
 Score must be in [0.0, 1.0].
 
-## Logging with tout
+## Logging with tout — and the checker pipeline
 
-Write extra diagnostic info to the checker log (visible to problem setters, not participants):
+`tout` is a log stream written by the interactor. It has two purposes:
+
+1. **Diagnostic info** — visible to problem setters in Polygon invocations for debugging.
+2. **Checker input** — if a checker is present, it runs **after** the interactor issues `_ok`, and reads `tout`'s content via the checker's `ouf` stream.
 
 ```cpp
 tout << "test case: secret=" << secret << " queries_used=" << queries << "\n";
 ```
+
+### Checker in interactive problems
+
+Checkers **can** be used alongside interactors. The pipeline is:
+
+1. Interactor runs, writes to `tout`, issues a verdict via `quitf`.
+2. If the interactor issues `_ok` → the **checker runs** and reads `tout` via its `ouf`.
+3. Checker can do additional validation (e.g. verify the answer logged in `tout` is correct) and confirm or override the verdict.
+
+This is optional — if the interactor's `quitf` is sufficient on its own (the common case), no checker is needed. For `guess_number`-style problems where the interactor already validates correctness and query count, a checker adds nothing and can be omitted.
 
 ## Statement conventions for interactive problems
 
@@ -191,7 +204,7 @@ Example statement note:
 
 1. In Polygon → Problem Settings → check **"Interactive"**
 2. Upload `interactor.cpp` as the interactor file
-3. The checker is **not** used for interactive problems — the interactor issues the verdict
+3. Checker is **optional** — if present, it runs after interactor issues `_ok` and reads `tout` via checker's `ouf`. If the interactor is self-sufficient (handles all verdict cases), omit the checker.
 4. The generator still produces test input files read by `inf`
 5. The validator still validates the test input format
 

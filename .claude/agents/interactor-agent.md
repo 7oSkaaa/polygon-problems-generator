@@ -29,7 +29,7 @@ Read tutorials/interactor.md
   ```
   The solution must `exit(0)` on reading `-1`. Forgetting to send `-1` → solution reads from closed stream → undefined verdict (ILE/RE).
 - Forgetting to flush any response → participant gets **ILE (Idleness Limit Exceeded)**, not WA
-- Use `tout` for diagnostic logging visible to problem setters
+- Use `tout` for diagnostic logging; if a checker is present it runs after interactor issues `_ok` and reads `tout` via checker's `ouf` — for self-sufficient interactors no checker is needed
 - Compile with cpp17, no warnings
 
 ## Stream Reference
@@ -39,7 +39,7 @@ Read tutorials/interactor.md
 | `inf`  | test input file | secret values, limits, test structure |
 | `ouf`  | participant stdout | participant queries and final answer |
 | `cout` | → participant stdin | sending responses to participant |
-| `tout` | — | diagnostic log (not seen by participant) |
+| `tout` | — | log readable by checker (via checker's `ouf`) after interactor issues `_ok` |
 
 ## Multi-test
 
