@@ -35,6 +35,7 @@ Read tutorials/interactor.md
   if (resp == "-1") exit(0);
   ```
 - Forgetting to flush any response → participant gets **ILE (Idleness Limit Exceeded)**, not WA
+- **Never use `ios_base::sync_with_stdio(false), cin.tie(nullptr)` in interactive solutions** — `cin.tie(nullptr)` unties `cin` from `cout`, killing the automatic pre-read flush; without it, `cin >> x` auto-flushes `cout` safely
 - Use `tout` for diagnostic logging; if a checker is present it runs after interactor issues `_ok` and reads `tout` via checker's `ouf` — for self-sufficient interactors no checker is needed
 - Compile with cpp17, no warnings
 

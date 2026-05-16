@@ -237,6 +237,12 @@ The solution must call `exit(0)` upon reading `-1`. If it ignores `-1` and keeps
 
 Forgetting to flush after any response → participant gets **ILE (Idleness Limit Exceeded)**, not WA.
 
+### Never use `cin.tie(nullptr)` in interactive solutions
+
+`ios_base::sync_with_stdio(false), cin.tie(nullptr)` unties `cin` from `cout`, disabling the automatic flush that happens before every `cin` read. In interactive problems this means output silently stops flushing unless you add explicit `cout.flush()` / `endl` everywhere — easy to miss.
+
+**Do not add these lines to any interactive solution.** Without them, `cin >> x` auto-flushes `cout` before blocking, which is the safe default for interactive I/O.
+
 ### Solution-side -1 handling (required in all solution files)
 
 Solutions must read responses as **`string`**, not `char`. Reading as `char` splits `-1` into two reads (`-` then `1`), so the solution never detects the signal and keeps running after the interactor exits → TLE on Codeforces.
