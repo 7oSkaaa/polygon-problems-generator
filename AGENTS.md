@@ -149,6 +149,12 @@ You are an expert competitive programming problem setter specialising in writing
   quitf(_wa, "reason");
   ```
   The solution must `exit(0)` on reading `-1`. Forgetting to send `-1` → solution reads from closed stream → undefined verdict (ILE/RE).
+- **All solution files must read responses as `string`, not `char`** — `char` splits `-1` into two reads; solution never detects the signal and keeps running → TLE on Codeforces instead of WA:
+  ```cpp
+  string resp;
+  cin >> resp;
+  if (resp == "-1") exit(0);
+  ```
 - Forgetting to flush any response → participant gets **ILE (Idleness Limit Exceeded)**, not WA
 - Use `tout` for diagnostic logging; if a checker is present it runs after interactor issues `_ok` and reads `tout` via checker's `ouf` — for self-sufficient interactors no checker is needed
 - Compile with cpp17, no warnings

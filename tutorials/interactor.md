@@ -236,3 +236,25 @@ quitf(_wa, "reason");
 The solution must call `exit(0)` upon reading `-1`. If it ignores `-1` and keeps reading from a closed stream, it may get undefined verdicts (ILE, RE, etc.) instead of a clean WA.
 
 Forgetting to flush after any response → participant gets **ILE (Idleness Limit Exceeded)**, not WA.
+
+### Solution-side -1 handling (required in all solution files)
+
+Solutions must read responses as **`string`**, not `char`. Reading as `char` splits `-1` into two reads (`-` then `1`), so the solution never detects the signal and keeps running after the interactor exits → TLE on Codeforces.
+
+**C++ pattern (all solution files):**
+```cpp
+string resp;
+cin >> resp;
+if (resp == "-1") exit(0);   // interactor signaled error — terminate immediately
+if (resp == "=") { /* final answer */ }
+else if (resp == "<") { /* search lower */ }
+else { /* search higher */ }
+```
+
+**Java pattern:**
+```java
+String resp = br.readLine().trim();
+if (resp.equals("-1")) System.exit(0);
+```
+
+This pattern must appear in `acc.cpp`, `acc_java.java`, `brute.cpp`, and `wa.cpp`. The statement's Interaction section must also tell contestants to terminate on `-1`.
