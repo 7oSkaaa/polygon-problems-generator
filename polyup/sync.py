@@ -58,10 +58,16 @@ def sync_problem(
     _sync_generators(api, pid, problem_dir, config)
     _sync_tests(api, pid, problem_dir)
     _sync_tags(api, pid, problem_dir)
+    _sync_difficulty(api, pid, problem_dir)
     _commit_and_build(api, pid, config)
 
     url = f"https://polygon.codeforces.com/edit-problem?problemId={problem_id}"
     print(f"\nDone! {url}")
+
+    print("\n⚠ Enable 'Auto update' manually (no API support):")
+    print(f"  {url}/files")
+    print("  • testlib.h → check 'Auto update'")
+    print("  • checker   → check 'Auto update'")
 
     if config.access:
         print("\n⚠ Grant access manually (no API support):")
@@ -167,10 +173,14 @@ def _sync_solutions(api: PolygonAPI, pid: dict, problem_dir: Path, config: SyncC
     sol_dir = problem_dir / "solutions"
     if not sol_dir.exists():
         return
+    tags = dict(config.solution_tags)
+    tags_file = problem_dir / "solution_tags.json"
+    if tags_file.exists():
+        tags.update(json.loads(tags_file.read_text()))
     for sol_file in sorted(sol_dir.iterdir()):
         if sol_file.suffix not in config.source_types:
             continue
-        tag = config.solution_tags.get(sol_file.stem, "OK")
+        tag = tags.get(sol_file.stem, "OK")
         src_type = config.source_types[sol_file.suffix]
         print(f"Uploading solution {sol_file.name} (tag={tag})...")
         api.call(
@@ -186,9 +196,10 @@ def _sync_validator_tests(api: PolygonAPI, pid: dict, problem_dir: Path):
     vtests_dir = problem_dir / "validator_tests"
     if not vtests_dir.exists():
         return
-    for i, vt_file in enumerate(sorted(vtests_dir.iterdir()), 1):
+    files = sorted(vtests_dir.iterdir())
+    new_count = len(files)
+    for i, vt_file in enumerate(files, 1):
         verdict = "VALID" if vt_file.name.startswith("valid") else "INVALID"
-        # ponytail: Polygon normalizes to \r\n; ensure consistent line endings
         content = vt_file.read_text().rstrip("\r\n") + "\r\n"
         print(f"Uploading validator test {i} ({verdict}): {vt_file.name}")
         api.call(
@@ -196,6 +207,10 @@ def _sync_validator_tests(api: PolygonAPI, pid: dict, problem_dir: Path):
             testset="tests", testIndex=str(i),
             testInput=content, testVerdict=verdict,
         )
+    for j in range(new_count + 1, new_count + 20):
+        if api.call("problem.deleteValidatorTest", **pid,
+                     testset="tests", testIndex=str(j), fatal=False) is None:
+            break
 
 
 def _sync_generators(api: PolygonAPI, pid: dict, problem_dir: Path, config: SyncConfig):
@@ -249,6 +264,17 @@ def _sync_tags(api: PolygonAPI, pid: dict, problem_dir: Path):
     if tags:
         print(f"Setting tags: {', '.join(tags)}")
         api.call("problem.saveTags", **pid, tags=",".join(tags))
+
+
+def _sync_difficulty(api: PolygonAPI, pid: dict, problem_dir: Path):
+    diff_path = problem_dir / "difficulty.txt"
+    if not diff_path.exists():
+        return
+    text = diff_path.read_text().strip()
+    if text:
+        level = text.splitlines()[0].strip()
+        print(f"Setting problem note: {level}")
+        api.call("problem.updateInfo", **pid, note=level)
 
 
 def _commit_and_build(api: PolygonAPI, pid: dict, config: SyncConfig):

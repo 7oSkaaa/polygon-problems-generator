@@ -45,7 +45,13 @@ class PolygonAPI:
             params["apiSig"] = _make_signature(method, params, self.api_secret)
             resp = requests.post(f"{BASE_URL}/{method}", data=params)
 
-        data = resp.json()
+        try:
+            data = resp.json()
+        except Exception:
+            if not fatal:
+                return None
+            print(f"  API error [{method}]: non-JSON response", file=sys.stderr)
+            sys.exit(1)
         if data.get("status") != "OK":
             msg = data.get("comment", data)
             if not fatal:

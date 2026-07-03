@@ -56,7 +56,7 @@ Apply `tutorials/polygon-hints.md` throughout the pipeline, especially for state
 Use Bash to create the folder structure and copy templates:
 
 ```bash
-mkdir -p problems/<name>/statement problems/<name>/solutions problems/<name>/generators
+mkdir -p problems/<name>/statement problems/<name>/solutions problems/<name>/generators problems/<name>/samples problems/<name>/validator_tests
 cp templates/validator.cpp            problems/<name>/validator.cpp
 cp templates/checker.cpp              problems/<name>/checker.cpp
 cp templates/statement/raw.tex        problems/<name>/statement/raw.tex
@@ -96,7 +96,17 @@ The NOTES section must explain the provided sample tests. For interactive proble
 )
 ```
 
-Write the returned content to `problems/<name>/statement/statement.tex`.
+When writing the returned content to `problems/<name>/statement/statement.tex`, ensure it uses the **section comment headers** that the polyup parser requires. The file MUST contain these exact comment-style section markers (not `\InputFile`/`\OutputFile`/`\Note` LaTeX commands):
+
+```
+% ─── Title ───────────────────────────────────────────────────────────────────
+% ─── Legend ──────────────────────────────────────────────────────────────────
+% ─── Input ───────────────────────────────────────────────────────────────────
+% ─── Output ──────────────────────────────────────────────────────────────────
+% ─── Notes ───────────────────────────────────────────────────────────────────
+```
+
+For interactive problems, also include `% ─── Interaction ───` between Input and Output. These headers are how `polyup/parsers.py` splits the statement into Polygon API fields. Without them, the statement uploads as empty.
 
 ---
 
@@ -337,6 +347,42 @@ Write to `problems/<name>/generators/generator.cpp`.
 
 ---
 
+## Step 10b — Write sample tests
+
+Extract the sample input/output from the problem parameters and write them as manual test files. These are uploaded to Polygon as the first tests and marked as "use in statements".
+
+For each sample (typically 1 sample for simple problems, up to 2–4 for problems with multiple edge cases):
+
+- Write `problems/<name>/samples/01.in` and `problems/<name>/samples/01.out`
+- Write `problems/<name>/samples/02.in` and `problems/<name>/samples/02.out` (if a second sample exists)
+- etc.
+
+The sample input/output must exactly match what appears in the statement's `\Note` section. For multitest problems, the sample input includes the test count on the first line.
+
+---
+
+## Step 10c — Generate validator tests
+
+Generate validator tests to verify the validator correctly accepts valid inputs and rejects invalid ones. Write files to `problems/<name>/validator_tests/`:
+
+- Files starting with `valid` are expected to **pass** validation (verdict: VALID)
+- Files starting with `invalid` are expected to **fail** validation (verdict: INVALID)
+
+Create at minimum:
+- `valid_sample.txt` — the sample input from the statement
+- `valid_min.txt` — minimum constraint values (e.g. t=1, smallest h and m)
+- `valid_max.txt` — maximum constraint values (e.g. t=1000, largest h and m)
+- `invalid_t_zero.txt` — t below minimum (e.g. t=0)
+- `invalid_t_over.txt` — t above maximum (e.g. t=1001)
+- `invalid_h_over.txt` — h above maximum (e.g. h=12)
+- `invalid_m_over.txt` — m above maximum (e.g. m=60)
+- `invalid_h_neg.txt` — h below minimum (e.g. h=-1)
+- `invalid_no_eof.txt` — missing EOF or extra data after valid input
+
+Adjust the specific invalid cases based on the problem's constraints. Every constraint boundary should have at least one valid and one invalid test.
+
+---
+
 ## Step 11 — Full review
 
 Spawn a fresh sub-agent:
@@ -382,18 +428,74 @@ Pick only tags that genuinely apply. Write one tag per line to `problems/<name>/
 
 ---
 
+## Step 12b — Set solution tags
+
+Determine the correct Polygon verdict for each solution file and write `problems/<name>/solution_tags.json`. This file overrides the default tag mapping in `polyup/config.py` on a per-problem basis.
+
+Available Polygon API tags:
+- `MA` — Main correct solution (one per problem, the primary ACC)
+- `OK` — Correct solution (additional correct solutions)
+- `TL` — Time limit exceeded
+- `WA` — Wrong answer
+
+Rules for `brute.cpp`:
+- **Non-interactive, higher complexity than ACC:** tag `TL`
+- **Non-interactive, same complexity as ACC** (e.g. both O(1)): tag `OK` — it will pass, not TLE
+- **Interactive:** tag `WA` — query limit exceeded → interactor `quitf(_wa)` → WA verdict, not TLE
+
+Write the JSON file:
+
+```json
+{
+  "acc": "MA",
+  "acc_java": "OK",
+  "brute": "<TL or OK or WA based on rules above>",
+  "wa": "WA"
+}
+```
+
+to `problems/<name>/solution_tags.json`.
+
+---
+
+## Step 13 — Predict difficulty
+
+Analyse the problem and predict its Codeforces difficulty level. Consider:
+
+- **Statement complexity**: how hard is it to understand what's being asked?
+- **Key observation**: how non-obvious is the main insight?
+- **Solution technique**: what algorithms/data structures are needed?
+- **Implementation difficulty**: how tricky is the code?
+- **Constraints**: do they require an optimized approach?
+
+Difficulty levels (pick exactly one):
+
+| Level | Typical profile |
+|---|---|
+| `Div2-A` | Direct implementation, no trick, O(1) or simple loop |
+| `Div2-B` | One small observation or standard technique (sorting, greedy) |
+| `Div2-C` | Non-trivial observation, moderate implementation (DP, binary search, BFS) |
+| `Div2-D` | Clever insight + non-trivial implementation (segment tree, advanced DP) |
+| `Div2-E` | Hard observation or combination of techniques, tricky edge cases |
+| `Div2-F` | Very hard, requires deep insight or rare technique |
+| `Div2-G` | Exceptional difficulty, research-level or multiple hard techniques combined |
+
+Write the predicted level and a one-line justification to `problems/<name>/difficulty.txt` in the format:
+
+```
+Div2-B
+Simple math formula with one observation (integer trick to avoid floats)
+```
+
+This file is displayed as a note when syncing to Polygon.
+
+---
+
 ## Done
 
 Report to the user:
 - Problem folder: `problems/<name>/`
 - List of all files written
 - Any blocking issues that remain (if any)
-- **Polygon solution tags** — instruct the user to set these in Polygon → Solutions tab:
-
-  | File | Polygon Tag |
-  |---|---|
-  | `acc.cpp` | **Main correct solution** |
-  | `acc_java.java` | **Correct solution** |
-  | `brute.cpp` (non-interactive) | **Time limit exceeded** |
-  | `brute.cpp` (interactive) | **Wrong Answer** — query limit exceeded → interactor `quitf(_wa)` → WA, not TLE |
-  | `wa.cpp` | **Wrong Answer** |
+- **Predicted difficulty**: from `difficulty.txt`
+- **Polygon solution tags** (auto-uploaded via `solution_tags.json`):

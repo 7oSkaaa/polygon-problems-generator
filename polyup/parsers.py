@@ -8,18 +8,39 @@ from .config import STANDARD_CHECKERS
 
 def parse_statement(tex_path: Path) -> dict[str, str]:
     text = tex_path.read_text()
+    result = {"legend": "", "input": "", "output": "", "notes": "", "interaction": ""}
+
+    # Try comment-header format: % ─── Legend ───
     sections = re.split(
         r"^%\s*─+\s*(Title|Legend|Input|Output|Notes|Interaction)\s*─+\s*$",
         text, flags=re.MULTILINE,
     )
-    result = {"legend": "", "input": "", "output": "", "notes": "", "interaction": ""}
-    for i in range(1, len(sections) - 1, 2):
-        key = sections[i].lower()
-        if key == "title":
-            continue
-        val = re.sub(r"^%.*\n", "", sections[i + 1], flags=re.MULTILINE).strip()
-        if key in result:
-            result[key] = val
+    if len(sections) > 1:
+        for i in range(1, len(sections) - 1, 2):
+            key = sections[i].lower()
+            if key == "title":
+                continue
+            val = re.sub(r"^%.*\n", "", sections[i + 1], flags=re.MULTILINE).strip()
+            if key in result:
+                result[key] = val
+        return result
+
+    # Fallback: \InputFile / \OutputFile / \Note LaTeX commands
+    parts = re.split(
+        r"^\\(InputFile|OutputFile|Note)\b.*$",
+        text, flags=re.MULTILINE,
+    )
+    if len(parts) > 1:
+        _TAG_MAP = {"InputFile": "input", "OutputFile": "output", "Note": "notes"}
+        # Everything before the first command is the legend (strip title line)
+        legend = re.sub(r"\\textbf\{\\Large\s+.*?\}\s*", "", parts[0]).strip()
+        result["legend"] = legend
+        for i in range(1, len(parts) - 1, 2):
+            key = _TAG_MAP.get(parts[i])
+            if key:
+                result[key] = parts[i + 1].strip()
+        return result
+
     return result
 
 
