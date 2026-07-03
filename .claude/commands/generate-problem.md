@@ -372,6 +372,16 @@ For every component that receives a **FAIL** verdict: spawn the corresponding su
 
 ---
 
+## Step 12 — Suggest tags
+
+Based on the problem statement, solution approach, and constraints, choose appropriate Codeforces-style tags for the problem. Common tags include:
+
+`math`, `implementation`, `greedy`, `dp`, `binary search`, `brute force`, `constructive algorithms`, `data structures`, `dfs and similar`, `graphs`, `number theory`, `sortings`, `strings`, `trees`, `two pointers`, `bitmasks`, `combinatorics`, `geometry`, `hashing`, `interactive`, `shortest paths`, `probabilities`, `games`, `divide and conquer`, `dsu`, `flows`, `fft`, `2-sat`, `ternary search`, `matrices`, `string suffix structures`, `chinese remainder theorem`, `meet-in-the-middle`, `expression parsing`, `schedules`
+
+Pick only tags that genuinely apply. Write one tag per line to `problems/<name>/tags.txt`. These are uploaded to Polygon automatically by `python3 -m polyup`.
+
+---
+
 ## Done
 
 Report to the user:
