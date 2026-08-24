@@ -10,6 +10,18 @@ def parse_statement(tex_path: Path) -> dict[str, str]:
     text = tex_path.read_text()
     result = {"legend": "", "input": "", "output": "", "notes": "", "interaction": ""}
 
+    # Agent-generated section-marker format: === LEGEND ===
+    sections = re.split(
+        r"^===\s*(TITLE|LEGEND|INPUT|OUTPUT|NOTES|INTERACTION)\s*===\s*$",
+        text, flags=re.MULTILINE | re.IGNORECASE,
+    )
+    if len(sections) > 1:
+        for i in range(1, len(sections) - 1, 2):
+            key = sections[i].lower()
+            if key in result:
+                result[key] = sections[i + 1].strip()
+        return result
+
     # Try comment-header format: % ─── Legend ───
     sections = re.split(
         r"^%\s*─+\s*(Title|Legend|Input|Output|Notes|Interaction)\s*─+\s*$",
@@ -46,7 +58,14 @@ def parse_statement(tex_path: Path) -> dict[str, str]:
 
 def parse_tutorial(tex_path: Path) -> str:
     text = tex_path.read_text()
-    return re.sub(r"^%.*\n", "", text, flags=re.MULTILINE).strip()
+    text = re.sub(r"^%.*\n", "", text, flags=re.MULTILINE)
+    text = re.sub(
+        r"^===\s*(KEY OBSERVATIONS|SOLUTION|COMPLEXITY|NOTES)\s*===\s*$",
+        lambda match: rf"\textbf{{{match.group(1).title()}}}",
+        text,
+        flags=re.MULTILINE | re.IGNORECASE,
+    )
+    return text.strip()
 
 
 def detect_standard_checker(checker_path: Path) -> str | None:
