@@ -23,11 +23,13 @@ Multi-agent pipeline for generating complete Polygon-ready competitive programmi
 3. `validator-agent` → `validator.cpp`
 4. `checker-agent` → `checker.cpp` (or note standard checker)
 5. `solutions-agent` → approach suggestions
-6. `solutions-agent` → `acc.cpp` + `acc_java.java`
+6. `solutions-agent` → `acc.cpp` + `acc_java.java` + `acc_alt.cpp`
 7. `solutions-agent` → `brute.cpp` (TLE)
 8. `solutions-agent` → `wa.cpp` (WA)
 9. `generator-agent` → `generators/generator.cpp`
-10. `reviewer-agent` → full review; re-generate any FAIL
+10. Originality check via yuantiji.ac (skip blocking for Ace / Div2-A)
+11. `reviewer-agent` → full review; re-generate any FAIL
+12. `./verify.sh problems/<name>` locally, then `python -m polyup <name>` to Polygon
 
 ## Problem Folder Layout
 
@@ -37,8 +39,9 @@ problems/<name>/
 │   ├── statement.tex   ← Polygon-ready LaTeX statement
 │   └── tutorial.tex    ← Polygon-ready LaTeX editorial
 ├── solutions/
-│   ├── acc.cpp         ← correct C++ solution (ACC)
+│   ├── acc.cpp         ← main correct C++ solution (clear, not over-optimized)
 │   ├── acc_java.java   ← correct Java solution (ACC)
+│   ├── acc_alt.cpp     ← second correct C++ solution (different approach)
 │   ├── brute.cpp       ← intentionally slow solution (TLE)
 │   └── wa.cpp          ← intentionally wrong solution (WA)
 ├── generators/
@@ -57,7 +60,11 @@ problems/<name>/
 - Standard Input/Output for all problems
 - Use `cpp17` for C++ and `java21` for Java
 - Use digit-separator constants: `100'000` not `100000`
-- All solution base names must be distinct: `acc`, `acc_java`, `brute`, `wa`
+- All solution base names must be distinct: `acc`, `acc_java`, `acc_alt`, `brute`, `wa`
+- No `#pragma GCC optimize` (or other compiler-optimization directives) in solutions
+- Keep the main ACC solution clear and relaxed — do not calibrate the time limit against a highly optimized implementation
+- Statements stay short and simple; avoid long stories that may change later
+- Images must be EPS (not JPG/PNG), with an explicit bounding box
 
 ## Agent Definitions
 
@@ -161,6 +168,8 @@ You are an expert competitive programming problem setter specialising in writing
 - **Never use `ios_base::sync_with_stdio(false), cin.tie(nullptr)` in interactive solutions** — `cin.tie(nullptr)` unties `cin` from `cout`, killing the automatic pre-read flush; without it, `cin >> x` auto-flushes `cout` safely
 - Use `tout` for diagnostic logging; if a checker is present it runs after interactor issues `_ok` and reads `tout` via checker's `ouf` — for self-sufficient interactors no checker is needed
 - Compile with cpp17, no warnings
+- Prefer a single test case. If multi-test is required, forward `t` immediately, call `setTestCase(tc + 1)` first in each iteration, and `quitf(_ok, ...)` once after the loop
+- A self-sufficient interactor needs no checker. If a checker is used, write `secret`, `answer`, and `queries_used` to `tout` before `quitf`, and have the checker call `ouf.readEoln()` after each integer
 
 ## Stream Reference
 
@@ -218,11 +227,14 @@ Always pass: problem description, constraints, existing content (when refining),
 5. **checker-agent** — recommend checker; if custom, generate → write to `problems/<name>/checker.cpp`
 6. *(interactive only)* **interactor-agent** — generate interactor → write to `problems/<name>/interactor.cpp`
 7. **solutions-agent** — suggest approaches (main + brute force)
-8. **solutions-agent** — generate ACC solution → `problems/<name>/solutions/acc.cpp` (+ `acc_java.java` if Java)
-9. **solutions-agent** — generate TLE solution → `problems/<name>/solutions/brute.cpp`
-10. **solutions-agent** — generate WA solution → `problems/<name>/solutions/wa.cpp`
-11. **generator-agent** — generate test generator → `problems/<name>/generators/generator.cpp`
-12. **reviewer-agent** — review full problem; fix every FAIL verdict
+8. **solutions-agent** — generate ACC solution → `problems/<name>/solutions/acc.cpp` (+ `acc_java.java`)
+9. **solutions-agent** — generate second ACC (different approach) → `problems/<name>/solutions/acc_alt.cpp`
+10. **solutions-agent** — generate TLE solution → `problems/<name>/solutions/brute.cpp`
+11. **solutions-agent** — generate WA solution → `problems/<name>/solutions/wa.cpp`
+12. **generator-agent** — generate test generator → `problems/<name>/generators/generator.cpp`
+13. Originality check — `python -m polyup originality <name>` (block unless Ace / Div2-A)
+14. **reviewer-agent** — review full problem; fix every FAIL verdict
+15. Local verify — `./verify.sh problems/<name>` then `python -m polyup <name>`
 
 ## Creating a Problem Folder
 
@@ -244,8 +256,9 @@ cp templates/generators/generator.cpp problems/<name>/generators/generator.cpp
 | `statement/tutorial.tex` | LaTeX editorial |
 | `validator.cpp` | testlib.h validator |
 | `checker.cpp` | testlib.h checker |
-| `solutions/acc.cpp` | Correct C++ solution (ACC) |
+| `solutions/acc.cpp` | Correct C++ solution (ACC, main, relaxed) |
 | `solutions/acc_java.java` | Correct Java solution (ACC) |
+| `solutions/acc_alt.cpp` | Second correct C++ solution (different approach) |
 | `solutions/brute.cpp` | Intentionally slow solution (TLE) |
 | `solutions/wa.cpp` | Intentionally wrong solution (WA) |
 | `generators/generator.cpp` | Test generator |
@@ -271,6 +284,8 @@ Determine `multitest` and `interactive` before generating any component — ask 
 - Review each component before finalising.
 - Run full problem review at the end; fix all FAIL verdicts before closing.
 - Never skip steps or leave solutions/checker incomplete.
+- After generation, run `./verify.sh problems/<name>`. If something fails, regenerate only that component with the log pasted as feedback.
+- Do not proceed with a non-easy problem that yuantiji flags as a copy or near-duplicate.
 
 ---
 
@@ -282,17 +297,19 @@ You are a strict competitive programming problem reviewer. Your job is to find e
 
 ## Review Hints by Component
 
-- **statement** — all variables in math mode, preferred wording from `tutorials/polygon-hints.md`, consistent multiple-testcase format, output wording, short legend (≤4 sentences), renderable TeX, all four sections present
-- **validator** — testlib.h included, `registerValidation` called, strict whitespace/EOF checks, named variables in read calls, all bounds validated, sum constraints checked immediately after each test case, `readEof` at end, no warnings
-- **checker** — standard checker preferred when sufficient, testlib.h included if custom, `registerTestlibCmd` called, `readAns` paradigm used, correct verdicts (`_ok`/`_wa`/`_pe`), no `freopen`, no warnings
+- **statement** — short simple legend (avoid long stories), all variables in math mode, preferred wording from `tutorials/polygon-hints.md`, consistent multiple-testcase format, output wording, renderable TeX, all four sections present, `\times` not `\cdots`, EPS images only
+- **validator** — testlib.h included, `registerValidation` called, strict whitespace/EOF checks, named variables in read calls, all bounds validated, sum constraints checked immediately after each test case, `readEof` at end, digit separators, no warnings, validator tests present
+- **checker** — standard checker preferred (`wcmp` default), testlib.h included if custom, `registerTestlibCmd` called, `readAns` paradigm used, correct verdicts (`_ok`/`_wa`/`_pe`), checker tests even for standard checkers, no `freopen`, no warnings
 - **generator** — testlib.h included, `registerGen` called, `opt<>` for CLI params, `rnd.partition` for multi-test budgets, `println` output, edge/random/adversarial/max-IO coverage, FreeMarker script present, no warnings
-- **solution** — no `freopen`, no compiler warnings, correct I/O, template structure preserved, matches expected tag (ACC/TLE/WA); for each file state the recommended Polygon tag:
-  - `acc.cpp` → **Main correct solution**
+- **solution** — no `freopen`, no `#pragma GCC optimize`, no compiler warnings, correct I/O, template structure preserved, matches expected tag (ACC/TLE/WA); for each file state the recommended Polygon tag:
+  - `acc.cpp` → **Main correct solution** (clear, not over-optimized)
   - `acc_java.java` → **Correct solution**
+  - `acc_alt.cpp` → **Correct solution** (different approach)
   - `brute.cpp` (non-interactive) → **Time limit exceeded**
   - `brute.cpp` (interactive) → **Wrong Answer** (query limit → interactor `quitf(_wa)` → WA, not TLE)
   - `wa.cpp` → **Wrong Answer**
-- **interactor** (interactive problems only) — `registerInteraction(argc, argv)` (no third argument), flushes after every `cout`, sends `-1` to solution before every `quitf(_wa/_pe)` on participant error, uses `ouf.read*()` not `cin`, multi-test sends `t` to solution and calls `setTestCase(tc+1)` per iteration
+- **originality** — unless difficulty is Ace or Div2-A, `originality.json` must not report `blocked: true`
+- **interactor** (interactive problems only) — `registerInteraction(argc, argv)` (no third argument), flushes after every `cout`, sends `-1` to solution before every `quitf(_wa/_pe)` on participant error, uses `ouf.read*()` not `cin`, multi-test sends `t` to solution and calls `setTestCase(tc+1)` per iteration, statement tells the participant to exit on `-1`
 
 ## Single Component Review Format
 
@@ -343,6 +360,9 @@ You are an expert competitive programming coach who writes clean, correct, and e
 - Java class name must match the file base name exactly (e.g. `acc_java.java` → `public class acc_java`)
 - Never use `freopen` in any solution
 - No compiler warnings
+- No `#pragma GCC optimize` or other compiler-optimization directives
+- `acc.cpp` must be a **clear, relaxed** implementation — not a highly optimized one used to set the time limit
+- Provide a second correct C++ solution `acc_alt.cpp` with a **different approach** (not a rewrite of `acc.cpp`)
 - cpp17 for C++, java21 for Java
 
 ## Tags
@@ -387,7 +407,7 @@ Apply `tutorials/polygon-hints.md` as a checklist before writing or revising any
 The statement must describe **what** to compute, never **how**.
 
 - Never name or hint at the required algorithm, data structure, or technique (e.g. never say "shortest path", "binary search", "segment tree", "greedy", "DP")
-- Frame everything in terms of the story and the goal — the solver must discover the key observation themselves
+- Frame everything in terms of the task and the goal — the solver must discover the key observation themselves
 - If the core insight is "this reduces to an MST problem", the statement should talk about connecting cities at minimum cost, not about graphs or trees
 - A good test: someone who does not know the solution should not be able to guess the algorithm just by reading the statement
 
@@ -404,10 +424,11 @@ The statement must describe **what** to compute, never **how**.
 
 ## Legend Requirements
 
-- Write a short, creative story (2–4 sentences) connecting to the problem theme
-- Give the problem a character, scenario, or setting — make it engaging and fun
-- Introduce the narrative, then state the task clearly at the end of the legend
-- Never more than 4 sentences; never dry or purely technical
+- Keep the legend **short and simple** (2–4 sentences). Avoid long stories — they tend to change and hide the task
+- State the setting only if it is needed to understand the input; then state the task clearly
+- Never name or hint at the algorithm
+- Images, if any, must be EPS with a bounding box — never JPG or PNG
+- Use `\times` for multiplication (never `\cdots` or the letter `x`)
 
 ## Statement Output Format
 
@@ -418,7 +439,7 @@ The statement file must begin with the problem title before the legend:
 \textbf{\Large <Problem Title>}
 
 === LEGEND ===
-<TeX — 2-4 sentence creative story, then the task>
+<TeX — 2-4 short sentences stating the task; avoid a long story>
 
 === INPUT ===
 <TeX for the input section>
@@ -457,6 +478,7 @@ In each step, read one line containing <describe what judge sends>. Then output 
 \end{itemize}
 
 <Termination: when the judge sends X, print "! answer" and terminate.>
+If the query is invalid or the query limit is exceeded, the judge sends \texttt{-1}. Terminate immediately.
 ```
 
 ### Interactive sample interaction table (in NOTES)

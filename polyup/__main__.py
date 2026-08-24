@@ -22,7 +22,15 @@ def _load_env(env_file: Path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Sync a problem folder to Polygon")
+    if len(sys.argv) >= 2 and sys.argv[1] == "originality":
+        from .originality import main as originality_main
+
+        raise SystemExit(originality_main(sys.argv[2:]))
+
+    parser = argparse.ArgumentParser(
+        description="Sync a problem folder to Polygon",
+        epilog="Subcommands: python -m polyup originality <problem>",
+    )
     parser.add_argument("problem", help="Problem folder name (under problems/)")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--time-limit", type=int, default=1000, help="Time limit in ms (default: 1000)")

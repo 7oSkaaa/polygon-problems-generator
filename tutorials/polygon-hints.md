@@ -171,6 +171,16 @@ Generator guidelines:
 - Remember that the random seed depends on the argument line; adding a number to the argument line creates another test.
 - `opt<int>("n", -1)` reads `-n=*` or returns `-1` if absent.
 
+## Originality
+
+- For problems harder than Ace / Div2-A, search http://yuantiji.ac/en/ (or `python -m polyup originality <name>`).
+- If the closest result is the same task (typically cosine ≥ 0.85), do not proceed — invent a different problem.
+- Ace and Div2-A may reuse classic exercises; treat the search as advisory.
+
+## Images
+
+- Use EPS only, with an explicit bounding box. Do not use JPG or PNG.
+
 ## Stresses
 
 - Before testing starts, include at least one stress: random small tests against all valid accepted/TL/ML solutions.

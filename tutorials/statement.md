@@ -12,7 +12,7 @@ Every statement has these sections in Polygon:
 
 | Section | Required | Purpose |
 |---|---|---|
-| **Legend** | always | Problem description / story |
+| **Legend** | always | Short task description (avoid long stories) |
 | **Input** | always | Input format with all constraints |
 | **Interaction** | interactive only | Per-round query/response protocol + flush reminder |
 | **Output** | always | Expected output format (for interactive: final answer format) |
@@ -119,12 +119,12 @@ $$\sum_{i=1}^{n} a_i \leq 10^6$$
 ### Images
 
 1. Upload image via **Statement Resource Files** (bottom of Statements page)
-2. Use only **black and white** images (color only if necessary)
+2. Use **EPS only** (not JPG or PNG). Prefer black and white; color only if necessary
 3. Always include a bounding box:
 
 ```latex
 \begin{center}
-    \includegraphics[bb=0 0 1080 424, scale=0.5]{image.png}
+    \includegraphics[bb=0 0 1080 424, scale=0.5]{image.eps}
 \end{center}
 ```
 

@@ -21,7 +21,7 @@ Apply `tutorials/polygon-hints.md` as a checklist before writing or revising any
 The statement must describe **what** to compute, never **how**.
 
 - Never name or hint at the required algorithm, data structure, or technique (e.g. never say "shortest path", "binary search", "segment tree", "greedy", "DP")
-- Frame everything in terms of the story and the goal — the solver must discover the key observation themselves
+- Frame everything in terms of the task and the goal — the solver must discover the key observation themselves
 - If the core insight is "this reduces to an MST problem", the statement should talk about connecting cities at minimum cost, not about graphs or trees
 - A good test: someone who does not know the solution should not be able to guess the algorithm just by reading the statement
 
@@ -38,10 +38,11 @@ The statement must describe **what** to compute, never **how**.
 
 ## Legend Requirements
 
-- Write a short, creative story (2–4 sentences) connecting to the problem theme
-- Give the problem a character, scenario, or setting — make it engaging and fun
-- Introduce the narrative, then state the task clearly at the end of the legend
-- Never more than 4 sentences; never dry or purely technical
+- Keep the legend **short and simple** (2–4 sentences). Avoid long stories — they tend to change and hide the task
+- State the setting only if it is needed to understand the input; then state the task clearly
+- Never name or hint at the algorithm
+- Images, if any, must be EPS with a bounding box — never JPG or PNG
+- Use `\times` for multiplication (never `\cdots` or the letter `x`)
 
 ## Statement Output Format
 
@@ -52,7 +53,7 @@ The statement file must begin with the problem title before the legend:
 \textbf{\Large <Problem Title>}
 
 === LEGEND ===
-<TeX — 2-4 sentence creative story, then the task>
+<TeX — 2-4 short sentences stating the task; avoid a long story>
 
 === INPUT ===
 <TeX for the input section>
@@ -91,6 +92,7 @@ In each step, read one line containing <describe what judge sends>. Then output 
 \end{itemize}
 
 <Termination: when the judge sends X, print "! answer" and terminate.>
+If the query is invalid or the query limit is exceeded, the judge sends \texttt{-1}. Terminate immediately.
 ```
 
 ### Interactive sample interaction table (in NOTES)

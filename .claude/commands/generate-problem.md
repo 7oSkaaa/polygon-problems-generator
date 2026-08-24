@@ -37,6 +37,8 @@ Once all required parameters are confirmed, derive the human-readable title from
 - Replace every `_` with a space and capitalise each word.
 - e.g. `carrot_sum` → `Carrot Sum`, `two_sum` → `Two Sum`
 
+Also classify a **tentative difficulty** from the idea (`Ace`, `Div2-A` … `Div2-G`). Write it to `problems/<name>/difficulty.txt` as soon as the folder exists. Ace and Div2-A skip the originality *block*; harder problems must be original.
+
 Use `<name>` (snake_case) for all file system paths.
 Use `<title>` (human-readable) wherever a label is needed: statement title, agent prompts.
 
@@ -67,6 +69,8 @@ cp templates/generators/generator.cpp problems/<name>/generators/generator.cpp
 # cp templates/interactor.cpp         problems/<name>/interactor.cpp
 ```
 
+Then write a tentative `problems/<name>/difficulty.txt` (first line `Ace` or `Div2-A` … `Div2-G`) so originality can skip the block for easy problems.
+
 ---
 
 ## Step 2 — Generate statement
@@ -86,8 +90,8 @@ Multitest: <multitest param>
 Sample tests:
 <sample tests param>
 
-IMPORTANT: The main algorithmic idea must be hidden. Describe what to compute in terms of the story and goal — never name or hint at the required algorithm, data structure, or technique. The solver must discover the key observation themselves.
-IMPORTANT: Apply tutorials/polygon-hints.md as a checklist. Use consistent multiple-testcase wording, prefer 'output' over 'print', keep definitions in logical order, and ensure all TeX is Polygon-renderable.
+IMPORTANT: The main algorithmic idea must be hidden. Describe what to compute — never name or hint at the required algorithm, data structure, or technique. Keep the legend short and simple; avoid long stories.
+IMPORTANT: Apply tutorials/polygon-hints.md as a checklist. Use consistent multiple-testcase wording, prefer 'output' over 'print', keep definitions in logical order, and ensure all TeX is Polygon-renderable. Use \\times for multiplication. Images must be EPS.
 
 Return the statement in sections: === TITLE === / === LEGEND === / === INPUT === / [=== INTERACTION === if interactive] / === OUTPUT === / === NOTES ===
 The TITLE section must contain only: \textbf{\Large <Problem Name>}
@@ -107,6 +111,20 @@ When writing the returned content to `problems/<name>/statement/statement.tex`, 
 ```
 
 For interactive problems, also include `% ─── Interaction ───` between Input and Output. These headers are how `polyup/parsers.py` splits the statement into Polygon API fields. Without them, the statement uploads as empty.
+
+---
+
+## Step 2b — Originality check
+
+After the statement is on disk, run:
+
+```bash
+python3 -m polyup originality <name>
+```
+
+- If the command exits `1` (blocked copy / near-duplicate) **and** the tentative difficulty is not Ace or Div2-A: **stop**. Tell the user the closest yuantiji hits (from `originality.json`) and ask for a different idea. Do not generate validator/solutions.
+- Ace / Div2-A: continue even if similar; keep `originality.json` as an advisory report.
+- Network failure: warn, continue, and re-run at the end.
 
 ---
 
@@ -269,6 +287,33 @@ Fill in only Solve()/solve() and any helpers. Keep template structure. Return on
 
 Write C++ to `problems/<name>/solutions/acc.cpp`.
 Write Java to `problems/<name>/solutions/acc_java.java` (ensure `public class acc_java`).
+The C++ ACC must be a clear, relaxed implementation — no `#pragma GCC optimize`.
+
+---
+
+## Step 7b — Generate second ACC (different approach)
+
+Spawn a fresh sub-agent:
+
+```
+Agent(
+  subagent_type: "solutions-agent",
+  prompt: "Generate a second ACC (correct) C++ solution using a DIFFERENT approach than the main solution.
+
+Problem statement:
+<full statement>
+
+Main approach (do NOT use this): <main approach from step 6>
+Use an alternative correct method (different algorithm, data structure, or formulation).
+Language: cpp
+Tag: ACC
+Multitest: <multitest param>
+
+Fill in only Solve() and any helpers. Keep template structure. Return only code. No pragmas."
+)
+```
+
+Write to `problems/<name>/solutions/acc_alt.cpp`.
 
 ---
 
@@ -424,7 +469,7 @@ Based on the problem statement, solution approach, and constraints, choose appro
 
 `math`, `implementation`, `greedy`, `dp`, `binary search`, `brute force`, `constructive algorithms`, `data structures`, `dfs and similar`, `graphs`, `number theory`, `sortings`, `strings`, `trees`, `two pointers`, `bitmasks`, `combinatorics`, `geometry`, `hashing`, `interactive`, `shortest paths`, `probabilities`, `games`, `divide and conquer`, `dsu`, `flows`, `fft`, `2-sat`, `ternary search`, `matrices`, `string suffix structures`, `chinese remainder theorem`, `meet-in-the-middle`, `expression parsing`, `schedules`
 
-Pick only tags that genuinely apply. Write one tag per line to `problems/<name>/tags.txt`. These are uploaded to Polygon automatically by `python3 -m polyup`.
+Pick only tags that genuinely apply. Also add a `#difficulty` tag matching `difficulty.txt` (e.g. `#div2-C`) and a `#topic` tag for the main algorithm. Write one tag per line to `problems/<name>/tags.txt`. These are uploaded to Polygon automatically by `python3 -m polyup`.
 
 ---
 
@@ -449,6 +494,7 @@ Write the JSON file:
 {
   "acc": "MA",
   "acc_java": "OK",
+  "acc_alt": "OK",
   "brute": "<TL or OK or WA based on rules above>",
   "wa": "WA"
 }
@@ -491,6 +537,26 @@ This file is displayed as a note when syncing to Polygon.
 
 ---
 
+## Step 14 — Local verify
+
+Run:
+
+```bash
+./verify.sh problems/<name>
+```
+
+If any check fails, spawn the matching sub-agent with the log as feedback, rewrite the file, and re-run verify until it passes (or report remaining blockers).
+
+Do **not** treat Polygon as the first debugger. Upload only after local verify is green:
+
+```bash
+python3 -m polyup <name>
+```
+
+Polygon package verify (`--no-verify` to skip) still runs invocations on the server.
+
+---
+
 ## Done
 
 Report to the user:
@@ -498,4 +564,6 @@ Report to the user:
 - List of all files written
 - Any blocking issues that remain (if any)
 - **Predicted difficulty**: from `difficulty.txt`
+- **Originality**: from `originality.json` (blocked unless Ace / Div2-A)
+- **Local verify**: `./verify.sh` result
 - **Polygon solution tags** (auto-uploaded via `solution_tags.json`):

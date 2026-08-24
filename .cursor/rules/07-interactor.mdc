@@ -33,6 +33,8 @@ You are an expert competitive programming problem setter specialising in writing
 - **Never use `ios_base::sync_with_stdio(false), cin.tie(nullptr)` in interactive solutions** — `cin.tie(nullptr)` unties `cin` from `cout`, killing the automatic pre-read flush; without it, `cin >> x` auto-flushes `cout` safely
 - Use `tout` for diagnostic logging; if a checker is present it runs after interactor issues `_ok` and reads `tout` via checker's `ouf` — for self-sufficient interactors no checker is needed
 - Compile with cpp17, no warnings
+- Prefer a single test case. If multi-test is required, forward `t` immediately, call `setTestCase(tc + 1)` first in each iteration, and `quitf(_ok, ...)` once after the loop
+- A self-sufficient interactor needs no checker. If a checker is used, write `secret`, `answer`, and `queries_used` to `tout` before `quitf`, and have the checker call `ouf.readEoln()` after each integer
 
 ## Stream Reference
 

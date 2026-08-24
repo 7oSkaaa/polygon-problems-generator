@@ -34,11 +34,14 @@ Always pass: problem description, constraints, existing content (when refining),
 5. **checker-agent** — recommend checker; if custom, generate → write to `problems/<name>/checker.cpp`
 6. *(interactive only)* **interactor-agent** — generate interactor → write to `problems/<name>/interactor.cpp`
 7. **solutions-agent** — suggest approaches (main + brute force)
-8. **solutions-agent** — generate ACC solution → `problems/<name>/solutions/acc.cpp` (+ `acc_java.java` if Java)
-9. **solutions-agent** — generate TLE solution → `problems/<name>/solutions/brute.cpp`
-10. **solutions-agent** — generate WA solution → `problems/<name>/solutions/wa.cpp`
-11. **generator-agent** — generate test generator → `problems/<name>/generators/generator.cpp`
-12. **reviewer-agent** — review full problem; fix every FAIL verdict
+8. **solutions-agent** — generate ACC solution → `problems/<name>/solutions/acc.cpp` (+ `acc_java.java`)
+9. **solutions-agent** — generate second ACC (different approach) → `problems/<name>/solutions/acc_alt.cpp`
+10. **solutions-agent** — generate TLE solution → `problems/<name>/solutions/brute.cpp`
+11. **solutions-agent** — generate WA solution → `problems/<name>/solutions/wa.cpp`
+12. **generator-agent** — generate test generator → `problems/<name>/generators/generator.cpp`
+13. Originality check — `python -m polyup originality <name>` (block unless Ace / Div2-A)
+14. **reviewer-agent** — review full problem; fix every FAIL verdict
+15. Local verify — `./verify.sh problems/<name>` then `python -m polyup <name>`
 
 ## Creating a Problem Folder
 
@@ -60,8 +63,9 @@ cp templates/generators/generator.cpp problems/<name>/generators/generator.cpp
 | `statement/tutorial.tex` | LaTeX editorial |
 | `validator.cpp` | testlib.h validator |
 | `checker.cpp` | testlib.h checker |
-| `solutions/acc.cpp` | Correct C++ solution (ACC) |
+| `solutions/acc.cpp` | Correct C++ solution (ACC, main, relaxed) |
 | `solutions/acc_java.java` | Correct Java solution (ACC) |
+| `solutions/acc_alt.cpp` | Second correct C++ solution (different approach) |
 | `solutions/brute.cpp` | Intentionally slow solution (TLE) |
 | `solutions/wa.cpp` | Intentionally wrong solution (WA) |
 | `generators/generator.cpp` | Test generator |
@@ -87,3 +91,5 @@ Determine `multitest` and `interactive` before generating any component — ask 
 - Review each component before finalising.
 - Run full problem review at the end; fix all FAIL verdicts before closing.
 - Never skip steps or leave solutions/checker incomplete.
+- After generation, run `./verify.sh problems/<name>`. If something fails, regenerate only that component with the log pasted as feedback.
+- Do not proceed with a non-easy problem that yuantiji flags as a copy or near-duplicate.

@@ -82,8 +82,9 @@ problems/<name>/
 │   ├── statement.tex   ← Polygon-ready LaTeX statement
 │   └── tutorial.tex    ← Polygon-ready LaTeX editorial
 ├── solutions/
-│   ├── acc.cpp         ← correct C++ solution (ACC)
+│   ├── acc.cpp         ← main correct C++ solution (clear, not over-optimized)
 │   ├── acc_java.java   ← correct Java solution (ACC)
+│   ├── acc_alt.cpp     ← second correct C++ solution (different approach)
 │   ├── brute.cpp       ← intentionally slow solution (TLE)
 │   └── wa.cpp          ← intentionally wrong solution (WA)
 ├── generators/
@@ -104,7 +105,11 @@ CRITICAL_RULES = """\
 - Standard Input/Output for all problems
 - Use `cpp17` for C++ and `java21` for Java
 - Use digit-separator constants: `100'000` not `100000`
-- All solution base names must be distinct: `acc`, `acc_java`, `brute`, `wa`
+- All solution base names must be distinct: `acc`, `acc_java`, `acc_alt`, `brute`, `wa`
+- No `#pragma GCC optimize` (or other compiler-optimization directives) in solutions
+- Keep the main ACC solution clear and relaxed — do not calibrate the time limit against a highly optimized implementation
+- Statements stay short and simple; avoid long stories that may change later
+- Images must be EPS (not JPG/PNG), with an explicit bounding box
 """
 
 
@@ -205,7 +210,7 @@ AI agent system for generating complete, Polygon-ready competitive programming p
 - Use `\\times` for multiplication — never `\\cdot`
 - Use `\\ldots` for sequences: `$a_1, a_2, \\ldots, a_n$`
 - Raw TeX only — no `\\begin{{document}}` wrapper
-- Legend: short creative story (2–4 sentences), never name the algorithm
+- Legend: short and simple (avoid long stories), never name the algorithm
 
 ## Validator Rules
 
@@ -253,11 +258,13 @@ Multi-agent pipeline for generating complete Polygon-ready competitive programmi
 3. `validator-agent` → `validator.cpp`
 4. `checker-agent` → `checker.cpp` (or note standard checker)
 5. `solutions-agent` → approach suggestions
-6. `solutions-agent` → `acc.cpp` + `acc_java.java`
+6. `solutions-agent` → `acc.cpp` + `acc_java.java` + `acc_alt.cpp`
 7. `solutions-agent` → `brute.cpp` (TLE)
 8. `solutions-agent` → `wa.cpp` (WA)
 9. `generator-agent` → `generators/generator.cpp`
-10. `reviewer-agent` → full review; re-generate any FAIL
+10. Originality check via yuantiji.ac (skip blocking for Ace / Div2-A)
+11. `reviewer-agent` → full review; re-generate any FAIL
+12. `./verify.sh problems/<name>` locally, then `python -m polyup <name>` to Polygon
 
 ## Problem Folder Layout
 
@@ -294,7 +301,7 @@ AI agent system for generating complete, Polygon-ready competitive programming p
 - `\\leq` / `\\geq` / `\\neq` — never `<=` / `>=` / `!=`
 - `\\times` for multiplication — never `\\cdot`
 - Raw TeX only — no `\\begin{{document}}` wrapper
-- Legend: 2–4 sentence creative story, never hint at the algorithm
+- Legend: short and simple (avoid long stories), never hint at the algorithm
 
 ## Validator / Checker / Generator Rules
 

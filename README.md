@@ -29,7 +29,7 @@ Each agent handles one concern and writes directly to the problem folder:
 | `generator-agent` | testlib.h test generator + FreeMarker script (`generator.cpp`) |
 | `reviewer-agent` | Full review against all guidelines; blocks on any FAIL verdict |
 
-Once generated, run `python -m polyup <problem>` to upload everything to Polygon automatically.
+Once generated, run `./verify.sh problems/<name>` locally, then `python -m polyup <problem>` to upload everything to Polygon.
 
 ## Prerequisites
 
@@ -68,7 +68,8 @@ polygon-problems-generator/
 │   │   ├── generator-agent.md
 │   │   └── reviewer-agent.md
 │   └── commands/
-│       └── generate-problem.md ← /generate-problem skill
+│       ├── generate-problem.md ← /generate-problem skill
+│       └── fix-component.md    ← /fix-component (targeted patch after verify/Polygon)
 ├── polyup/                     ← Polygon sync package
 │   ├── __main__.py             ← CLI entry point
 │   ├── api.py                  ← Polygon API client (HMAC signing)
@@ -91,7 +92,11 @@ polygon-problems-generator/
 │   ├── statement/
 │   ├── solutions/
 │   └── generators/
-├── tutorials/                  ← writing guides read by agents at runtime
+├── verify.sh                       ← local compile / validator / stress / originality
+├── docs/
+│   ├── workflow.md                 ← intended loop + how to prompt fixes
+│   └── verify.md                   ← verify.sh vs Polyman vs Polygon
+├── tutorials/                      ← writing guides read by agents at runtime
 │   └── polygon-hints.md
 ├── guidelines.md               ← full workflow + checklists
 ├── problems/                   ← generated problems (gitignored)
@@ -134,21 +139,22 @@ Output:
 10
 ```
 
-Claude will stop and ask only if a required parameter is missing, then run the full 12-step pipeline automatically:
+Claude will stop and ask only if a required parameter is missing, then run the pipeline automatically:
 
 1. Create problem folder from templates
 2. Generate LaTeX statement
-3. Generate LaTeX tutorial (editorial)
-4. Generate testlib.h validator
-5. Recommend or generate checker
-6. Generate interactor (interactive problems only)
-7. Suggest algorithmic approaches
-8. Generate ACC solution (C++ + Java)
-9. Generate TLE solution (intentionally slow)
-10. Generate WA solution (intentionally buggy)
+3. Originality check (blocks copies except Ace / Div2-A)
+4. Generate LaTeX tutorial (editorial)
+5. Generate testlib.h validator
+6. Recommend or generate checker
+7. Generate interactor (interactive problems only)
+8. Suggest algorithmic approaches
+9. Generate ACC (C++ + Java) and second ACC (`acc_alt.cpp`)
+10. Generate TLE and WA solutions
 11. Generate test generator with FreeMarker script
 12. Full review — re-generates any component that fails
-13. Suggest Codeforces tags → `tags.txt`
+13. Tags (`#topic`, `#difficulty`) → `tags.txt`
+14. `./verify.sh problems/<name>`
 
 Every generated problem lands in `problems/<name>/` with this structure:
 
@@ -158,8 +164,9 @@ problems/<name>/
 │   ├── statement.tex   ← Polygon-ready LaTeX statement
 │   └── tutorial.tex    ← Polygon-ready LaTeX editorial
 ├── solutions/
-│   ├── acc.cpp         ← correct C++ solution (ACC)
+│   ├── acc.cpp         ← main correct C++ (clear, not over-optimized)
 │   ├── acc_java.java   ← correct Java solution (ACC)
+│   ├── acc_alt.cpp     ← second correct C++ (different approach)
 │   ├── brute.cpp       ← intentionally slow solution (TLE)
 │   └── wa.cpp          ← intentionally wrong solution (WA)
 ├── generators/
@@ -169,6 +176,26 @@ problems/<name>/
 ├── interactor.cpp      ← only for interactive problems
 └── tags.txt            ← Codeforces-style tags (one per line)
 ```
+
+### Local verify
+
+`verify.sh` is the pre-upload harness (compile, validator tests, samples, ACC/Java/alt, WA, stress, originality). It is **not** Polyman and it does not replace Polygon invocations. Full comparison: [`docs/verify.md`](docs/verify.md). How to prompt a fix after a failure: [`docs/workflow.md`](docs/workflow.md).
+
+```bash
+./verify.sh problems/<name>
+./verify.sh problems/<name> --stress 200 --keep
+./verify.sh problems/<name> --skip-originality   # offline
+```
+
+### Originality
+
+Non-easy problems (not Ace / Div2-A) are searched against ~250k known tasks via [yuantiji.ac](http://yuantiji.ac/en/):
+
+```bash
+python -m polyup originality <name>
+```
+
+A copy or near-duplicate (cosine ≥ 0.85 by default) **stops the pipeline**. Ace and Div2-A still get a report in `originality.json` but are not blocked.
 
 ### Uploading to Polygon
 
@@ -216,6 +243,12 @@ python -m polyup water_bottles --access user1:WRITE user2:READ
 | `--no-verify` | — | Build without verification |
 | `--access` | — | Access reminders, e.g. `user1:WRITE user2:READ` |
 
+Originality (no Polygon keys required):
+
+```bash
+python -m polyup originality water_bottles
+```
+
 Access can also be configured via `problems/<name>/access.json`:
 
 ```json
@@ -226,11 +259,13 @@ Access can also be configured via `problems/<name>/access.json`:
 
 ## Build locally
 
+Prefer `./verify.sh problems/<name>` over ad-hoc compiles. Manual equivalent:
+
 ```bash
 cd problems/<name>
-g++ -std=c++17 -O2 -Wall -Wextra -I ../../testlib -o validator validator.cpp
-g++ -std=c++17 -O2 -Wall -Wextra -I ../../testlib -o checker checker.cpp
-g++ -std=c++17 -O2 -Wall -Wextra -I ../../testlib -o gen generators/generator.cpp
+g++ -std=c++17 -O2 -Wall -Wextra -Werror -I ../../testlib -o validator validator.cpp
+g++ -std=c++17 -O2 -Wall -Wextra -Werror -I ../../testlib -o checker checker.cpp
+g++ -std=c++17 -O2 -Wall -Wextra -Werror -I ../../testlib -o gen generators/generator.cpp
 ```
 
 ## AI tool support
@@ -254,4 +289,7 @@ Agent definitions in `.claude/agents/` are the single source of truth. Running `
 - [testlib.h overview](https://codeforces.com/blog/entry/18289)
 - [Polygon statements manual](https://polygon.codeforces.com/docs/statements-tex-manual)
 - [Polygon API documentation](https://docs.google.com/document/d/1mb6CDENEIpkkB_RV-gEy3PQfLBflCqZcD1UJ4f10hGA)
-- [Polygon usage tutorial](https://quangloc99.github.io/2022/03/08/polygon-codeforces-tutorial.html)
+- [Problem preparation checklist](https://7oskaaa.github.io/problem-guideline/)
+- [Is my problem new? (yuantiji)](http://yuantiji.ac/en/)
+- [Workflow (local → Polygon, how to prompt fixes)](docs/workflow.md)
+- [verify.sh](docs/verify.md)

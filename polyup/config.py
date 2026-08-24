@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 SOLUTION_TAGS: dict[str, str] = {
     "acc": "MA",
     "acc_java": "OK",
+    "acc_alt": "OK",
     "brute": "TL",
     "wa": "WA",
 }

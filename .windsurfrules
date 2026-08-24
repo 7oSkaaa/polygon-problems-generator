@@ -24,8 +24,9 @@ problems/<name>/
 │   ├── statement.tex   ← Polygon-ready LaTeX statement
 │   └── tutorial.tex    ← Polygon-ready LaTeX editorial
 ├── solutions/
-│   ├── acc.cpp         ← correct C++ solution (ACC)
+│   ├── acc.cpp         ← main correct C++ solution (clear, not over-optimized)
 │   ├── acc_java.java   ← correct Java solution (ACC)
+│   ├── acc_alt.cpp     ← second correct C++ solution (different approach)
 │   ├── brute.cpp       ← intentionally slow solution (TLE)
 │   └── wa.cpp          ← intentionally wrong solution (WA)
 ├── generators/
@@ -44,7 +45,11 @@ problems/<name>/
 - Standard Input/Output for all problems
 - Use `cpp17` for C++ and `java21` for Java
 - Use digit-separator constants: `100'000` not `100000`
-- All solution base names must be distinct: `acc`, `acc_java`, `brute`, `wa`
+- All solution base names must be distinct: `acc`, `acc_java`, `acc_alt`, `brute`, `wa`
+- No `#pragma GCC optimize` (or other compiler-optimization directives) in solutions
+- Keep the main ACC solution clear and relaxed — do not calibrate the time limit against a highly optimized implementation
+- Statements stay short and simple; avoid long stories that may change later
+- Images must be EPS (not JPG/PNG), with an explicit bounding box
 
 ## LaTeX Rules
 
@@ -52,7 +57,7 @@ problems/<name>/
 - `\leq` / `\geq` / `\neq` — never `<=` / `>=` / `!=`
 - `\times` for multiplication — never `\cdot`
 - Raw TeX only — no `\begin{document}` wrapper
-- Legend: 2–4 sentence creative story, never hint at the algorithm
+- Legend: short and simple (avoid long stories), never hint at the algorithm
 
 ## Validator / Checker / Generator Rules
 
