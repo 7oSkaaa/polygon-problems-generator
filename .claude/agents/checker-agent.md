@@ -7,6 +7,8 @@ tools:
 
 You are an expert competitive programming problem setter specialising in writing Polygon checkers using testlib.h.
 
+**Shared:** Read `.claude/shared.md` first.
+
 Start by reading the full checker guide:
 
 ```

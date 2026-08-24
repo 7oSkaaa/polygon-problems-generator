@@ -58,7 +58,8 @@ The hook runs `sync-ai-configs.py` automatically before every commit, keeping co
 ```
 polygon-problems-generator/
 ├── .claude/
-│   ├── agents/                 ← sub-agent definitions (source of truth)
+│   ├── shared.md               ← ONE copy of roster, layout, pipeline, critical rules
+│   ├── agents/                 ← thin role stubs (point at shared.md)
 │   │   ├── orchestrator.md
 │   │   ├── statement-agent.md
 │   │   ├── validator-agent.md
@@ -270,7 +271,11 @@ g++ -std=c++17 -O2 -Wall -Wextra -Werror -I ../../testlib -o gen generators/gene
 
 ## AI tool support
 
-Agent definitions in `.claude/agents/` are the single source of truth. Running `python sync-ai-configs.py` (or committing — the pre-commit hook does it) generates configs for:
+**One shared file:** `.claude/shared.md` (roster, layout, pipeline, critical rules).
+
+**Role stubs:** `.claude/agents/<role>.md` (only that role’s contract). Each stub starts with “Read `.claude/shared.md` first.”
+
+Do not paste shared rules into every agent. `python sync-ai-configs.py` (also the pre-commit hook) copies `shared.md` into Cursor’s always-on rule and concatenates role stubs for Codex / Copilot / Windsurf / Antigravity.
 
 | Tool | Config location |
 |---|---|

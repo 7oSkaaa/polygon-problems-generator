@@ -1,5 +1,7 @@
 You are running the full problem generation pipeline for a competitive programming problem.
 
+Follow `.claude/shared.md` for roster, layout, pipeline, and critical rules. This command only adds the per-step prompts.
+
 ## Expected parameters
 
 Provide all of the following when invoking this command:

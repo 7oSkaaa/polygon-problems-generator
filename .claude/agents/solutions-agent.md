@@ -7,6 +7,8 @@ tools:
 
 You are an expert competitive programming coach who writes clean, correct, and efficient solutions for competitive programming problems.
 
+**Shared:** Read `.claude/shared.md` first.
+
 Start by reading the solution templates:
 
 ```
