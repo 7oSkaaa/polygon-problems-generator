@@ -1,41 +1,30 @@
 # Polygon Problems Generator
 
-A Claude Code agent system for generating complete, Polygon-ready competitive programming problems from scratch — statement, validator, checker, solutions, and test generator — all coordinated by AI agents. Includes `polyup`, a Python package that syncs generated problems to Polygon via its API.
+AI agents that produce a complete, Polygon-ready competitive programming problem (statement, tutorial, validator, checker, solutions, generator), plus `polyup` to upload it and `verify.sh` to check it locally first.
 
-## How it works
+Works in [Claude Code](https://claude.ai/code) (`/generate-problem`) and Cursor (orchestrator + the same files). Shared rules live in **one** file: [`.claude/shared.md`](.claude/shared.md).
 
-You describe a problem idea. The `/generate-problem` skill spawns a pipeline of specialised sub-agents, each with its own fresh context, that produce every file needed to upload the problem to Codeforces Polygon.
+## Intended workflow
 
 ```
-/generate-problem
-name: broken_keyboard
-statement: ...
-solution: ...
-constraints: ...
-sample tests:
-Input: ...
-Output: ...
+idea → /generate-problem → originality → ./verify.sh → python -m polyup → Polygon package verify
+              ↑                              |                  |
+              └──────── /fix-component ←─────┴──────────────────┘
 ```
 
-Each agent handles one concern and writes directly to the problem folder:
+1. **Generate locally** — `/generate-problem` (or the orchestrator). Files go in `problems/<name>/`.
+2. **Originality** — [yuantiji.ac](http://yuantiji.ac/en/) search. Copies / near-duplicates **block** except Ace and Div2-A.
+3. **Local verify** — `./verify.sh problems/<name>` (compile with `-Werror`, validator tests, samples, ACC / Java / `acc_alt`, WA, stress).
+4. **Upload** — `python -m polyup <name>` builds the Polygon package with verification. That is the official invocations pass.
+5. **Fix one file** — do not regenerate the whole problem. `/fix-component` or paste the log (see [docs/workflow.md](docs/workflow.md)).
 
-| Agent | Produces |
-|---|---|
-| `statement-agent` | LaTeX statement + editorial (`statement.tex`, `tutorial.tex`) |
-| `validator-agent` | testlib.h input validator (`validator.cpp`) |
-| `checker-agent` | Standard checker recommendation or custom checker (`checker.cpp`) |
-| `interactor-agent` | testlib.h interactor for interactive problems (`interactor.cpp`) |
-| `solutions-agent` | ACC / TLE / WA solutions in C++ and Java |
-| `generator-agent` | testlib.h test generator + FreeMarker script (`generator.cpp`) |
-| `reviewer-agent` | Full review against all guidelines; blocks on any FAIL verdict |
-
-Once generated, run `./verify.sh problems/<name>` locally, then `python -m polyup <problem>` to upload everything to Polygon.
+`verify.sh` is a pre-upload harness, not [Polyman](docs/verify.md) and not Polygon’s test runner. Use Polygon for statement PDF, full invocations, and time-limit calibration.
 
 ## Prerequisites
 
-- [Claude Code](https://claude.ai/code) CLI installed and authenticated
-- Git
-- Python 3.10+ (for `polyup` and `sync-ai-configs.py`)
+- Claude Code and/or Cursor
+- Git, Python 3.10+ (`polyup`, `sync-ai-configs.py`)
+- `g++` with C++17 (and `javac` for Java ACC)
 
 ## Setup
 
@@ -43,91 +32,24 @@ Once generated, run `./verify.sh problems/<name>` locally, then `python -m polyu
 git clone https://github.com/7oSkaaa/polygon-problems-generator.git
 cd polygon-problems-generator
 
-# Activate the pre-commit hook (one-time, per machine)
 git config core.hooksPath .githooks
 
-# Configure Polygon API credentials
 cp .env.example .env
-# Edit .env with your POLYGON_API_KEY and POLYGON_API_SECRET
+# POLYGON_API_KEY and POLYGON_API_SECRET
 ```
 
-The hook runs `sync-ai-configs.py` automatically before every commit, keeping configs for Cursor, Copilot, Codex, Windsurf, and Antigravity in sync with `.claude/agents/`.
+The pre-commit hook runs `sync-ai-configs.py` from [`.claude/shared.md`](.claude/shared.md) + [`.claude/agents/`](.claude/agents/).
 
-## Repository layout
-
-```
-polygon-problems-generator/
-├── .claude/
-│   ├── shared.md               ← ONE copy of roster, layout, pipeline, critical rules
-│   ├── agents/                 ← thin role stubs (point at shared.md)
-│   │   ├── orchestrator.md
-│   │   ├── statement-agent.md
-│   │   ├── validator-agent.md
-│   │   ├── checker-agent.md
-│   │   ├── interactor-agent.md
-│   │   ├── solutions-agent.md
-│   │   ├── generator-agent.md
-│   │   └── reviewer-agent.md
-│   └── commands/
-│       ├── generate-problem.md ← /generate-problem skill
-│       └── fix-component.md    ← /fix-component (targeted patch after verify/Polygon)
-├── polyup/                     ← Polygon sync package
-│   ├── __main__.py             ← CLI entry point
-│   ├── api.py                  ← Polygon API client (HMAC signing)
-│   ├── config.py               ← configurable defaults (SyncConfig)
-│   ├── parsers.py              ← statement/tutorial/checker parsers
-│   └── sync.py                 ← orchestration (sync_problem)
-├── .cursor/rules/              ← Cursor AI rules (auto-generated)
-├── .github/
-│   └── copilot-instructions.md ← GitHub Copilot instructions (auto-generated)
-├── .agents/skills/             ← Google Antigravity skills (auto-generated)
-├── .githooks/
-│   └── pre-commit              ← runs sync-ai-configs.py before every commit
-├── .windsurfrules              ← Windsurf rules (auto-generated)
-├── AGENTS.md                   ← OpenAI Codex agent definitions (auto-generated)
-├── sync-ai-configs.py          ← generates all tool configs from .claude/agents/
-├── templates/                  ← base files cloned for every new problem
-│   ├── validator.cpp
-│   ├── checker.cpp
-│   ├── interactor.cpp
-│   ├── statement/
-│   ├── solutions/
-│   └── generators/
-├── verify.sh                       ← local compile / validator / stress / originality
-├── docs/
-│   ├── workflow.md                 ← intended loop + how to prompt fixes
-│   └── verify.md                   ← verify.sh vs Polyman vs Polygon
-├── tutorials/                      ← writing guides read by agents at runtime
-│   └── polygon-hints.md
-├── guidelines.md               ← full workflow + checklists
-├── problems/                   ← generated problems (gitignored)
-└── testlib/                    ← bundled testlib.h
-```
-
-## Usage
-
-### Generating a problem
-
-Open Claude Code in this directory and run `/generate-problem` with the following parameters:
-
-| Parameter | Required | Default | Description |
-|---|---|---|---|
-| `name` | yes | — | Snake_case identifier — converted to a readable title automatically, e.g. `carrot_sum` → *Carrot Sum* |
-| `statement` | yes | — | One or two sentences describing what the solver must compute |
-| `solution` | yes | — | The intended algorithmic idea / approach |
-| `constraints` | yes | — | Full constraint block, e.g. `1 ≤ t ≤ 10^4, 1 ≤ n ≤ 10^5` |
-| `multitest` | no | yes | Whether the problem has multiple test cases per file |
-| `interactive` | no | no | Whether the problem is interactive (requires an interactor) |
-| `sample tests` | yes | — | At least one sample input/output pair (for interactive: show the interaction) |
-
-**Example:**
+## Generate a problem
 
 ```
 /generate-problem
 name: carrot_sum
 statement: Count integers in [L, R] whose digit sum is prime and the number is divisible by it.
-solution: Digit DP — precompute suffix-count tables for each prime digit-sum up to 162, then process all queries offline in O(len × 10) per prime.
+solution: Digit DP — precompute suffix-count tables for each prime digit-sum up to 162.
 constraints: 1 ≤ t ≤ 10^4, 1 ≤ L ≤ R ≤ 10^18
+multitest: yes
+interactive: no
 sample tests:
 Input:
 3
@@ -140,47 +62,41 @@ Output:
 10
 ```
 
-Claude will stop and ask only if a required parameter is missing, then run the pipeline automatically:
+| Parameter | Required | Default | Description |
+|---|---|---|---|
+| `name` | yes | — | `snake_case` id → title, e.g. `carrot_sum` → *Carrot Sum* |
+| `statement` | yes | — | What to compute (keep it short; hide the algorithm) |
+| `solution` | yes | — | Intended approach (not written into the statement) |
+| `constraints` | yes | — | e.g. `1 ≤ t ≤ 10^4, 1 ≤ n ≤ 10^5` |
+| `multitest` | no | yes | Multiple test cases per file |
+| `interactive` | no | no | Needs `interactor.cpp` |
+| `sample tests` | yes | — | At least one sample (or an interaction trace) |
 
-1. Create problem folder from templates
-2. Generate LaTeX statement
-3. Originality check (blocks copies except Ace / Div2-A)
-4. Generate LaTeX tutorial (editorial)
-5. Generate testlib.h validator
-6. Recommend or generate checker
-7. Generate interactor (interactive problems only)
-8. Suggest algorithmic approaches
-9. Generate ACC (C++ + Java) and second ACC (`acc_alt.cpp`)
-10. Generate TLE and WA solutions
-11. Generate test generator with FreeMarker script
-12. Full review — re-generates any component that fails
-13. Tags (`#topic`, `#difficulty`) → `tags.txt`
-14. `./verify.sh problems/<name>`
+Pipeline (also in `shared.md`): folder → statement → originality → tutorial → validator → checker → interactor (if needed) → ACC + Java + `acc_alt` + brute + WA → generator → review → `./verify.sh`.
 
-Every generated problem lands in `problems/<name>/` with this structure:
+Output:
 
 ```
 problems/<name>/
-├── statement/
-│   ├── statement.tex   ← Polygon-ready LaTeX statement
-│   └── tutorial.tex    ← Polygon-ready LaTeX editorial
-├── solutions/
-│   ├── acc.cpp         ← main correct C++ (clear, not over-optimized)
-│   ├── acc_java.java   ← correct Java solution (ACC)
-│   ├── acc_alt.cpp     ← second correct C++ (different approach)
-│   ├── brute.cpp       ← intentionally slow solution (TLE)
-│   └── wa.cpp          ← intentionally wrong solution (WA)
-├── generators/
-│   └── generator.cpp   ← testlib.h generator + FreeMarker script
+├── statement/statement.tex
+├── statement/tutorial.tex
+├── solutions/acc.cpp          ← main ACC (clear, not over-optimized)
+├── solutions/acc_java.java
+├── solutions/acc_alt.cpp      ← second ACC, different approach
+├── solutions/brute.cpp
+├── solutions/wa.cpp
+├── generators/generator.cpp
 ├── validator.cpp
 ├── checker.cpp
-├── interactor.cpp      ← only for interactive problems
-└── tags.txt            ← Codeforces-style tags (one per line)
+├── interactor.cpp             ← interactive only
+├── samples/
+├── validator_tests/
+├── tags.txt                   ← #topic and #difficulty
+├── difficulty.txt
+└── originality.json
 ```
 
-### Local verify
-
-`verify.sh` is the pre-upload harness (compile, validator tests, samples, ACC/Java/alt, WA, stress, originality). It is **not** Polyman and it does not replace Polygon invocations. Full comparison: [`docs/verify.md`](docs/verify.md). How to prompt a fix after a failure: [`docs/workflow.md`](docs/workflow.md).
+## Local verify
 
 ```bash
 ./verify.sh problems/<name>
@@ -188,113 +104,107 @@ problems/<name>/
 ./verify.sh problems/<name> --skip-originality   # offline
 ```
 
-### Originality
+Details: [docs/verify.md](docs/verify.md).
 
-Non-easy problems (not Ace / Div2-A) are searched against ~250k known tasks via [yuantiji.ac](http://yuantiji.ac/en/):
+## Originality
 
 ```bash
 python -m polyup originality <name>
 ```
 
-A copy or near-duplicate (cosine ≥ 0.85 by default) **stops the pipeline**. Ace and Div2-A still get a report in `originality.json` but are not blocked.
+Uses [yuantiji.ac](http://yuantiji.ac/en/). Cosine ≥ 0.85 (similar) or ≥ 0.90 (copy) **stops** the pipeline unless difficulty is Ace or Div2-A. Override with `YUANTIJI_SIMILAR` / `YUANTIJI_COPY`. No Polygon API keys needed.
 
-### Uploading to Polygon
+## Fix a component
 
-`polyup` syncs a generated problem folder to Polygon via the API:
+```
+/fix-component
+name: carrot_sum
+component: validator
+issue:
+<paste verify.sh or Polygon log>
+```
+
+Or in chat: name the file, paste the failure, keep everything else unchanged. Full prompt patterns: [docs/workflow.md](docs/workflow.md).
+
+## Upload to Polygon
 
 ```bash
-# Basic usage
 python -m polyup water_bottles
-
-# Dry run (no API calls)
 python -m polyup water_bottles --dry-run
-
-# Custom limits
 python -m polyup water_bottles --time-limit 2000 --memory-limit 512
-
-# Skip package build
 python -m polyup water_bottles --no-build
-
-# Grant access (reminder only — Polygon API doesn't support access management)
 python -m polyup water_bottles --access user1:WRITE user2:READ
 ```
 
-**What `polyup` uploads:**
-
-- Problem metadata (time/memory limits, input/output type)
-- Statement and tutorial (LaTeX)
-- Validator, checker, interactor
-- All solutions with correct Polygon tags (MA/OK/TL/WA)
-- Test generator and FreeMarker script
-- Validator tests
-- Problem tags from `tags.txt`
-- Commits and builds the package on Polygon
-
-**CLI options:**
+Uploads metadata, statement, tutorial, validator, checker, interactor, solutions (`acc` = MA, `acc_java` / `acc_alt` = OK, `brute` = TL or WA if interactive, `wa` = WA), generator + FreeMarker script, validator tests, tags; then commits and builds the package (`verify=true` unless `--no-verify`).
 
 | Option | Default | Description |
 |---|---|---|
-| `--dry-run` | — | Show what would be uploaded without calling the API |
-| `--time-limit` | 1000 | Time limit in milliseconds |
-| `--memory-limit` | 256 | Memory limit in MB |
+| `--dry-run` | — | Print what would be uploaded |
+| `--time-limit` | 1000 | Time limit (ms) |
+| `--memory-limit` | 256 | Memory limit (MB) |
 | `--lang` | english | Statement language |
 | `--commit-message` | `polyup auto-upload` | Polygon commit message |
-| `--api-delay` | 0.3 | Delay between API calls (seconds) |
-| `--no-build` | — | Skip package build after upload |
-| `--no-verify` | — | Build without verification |
-| `--access` | — | Access reminders, e.g. `user1:WRITE user2:READ` |
+| `--api-delay` | 0.3 | Seconds between API calls |
+| `--no-build` | — | Skip package build |
+| `--no-verify` | — | Build without Polygon verification |
+| `--access` | — | Reminder only (`user:WRITE`) |
 
-Originality (no Polygon keys required):
+Access can also live in `problems/<name>/access.json`. The Polygon API cannot set access; set it in the web UI.
 
-```bash
-python -m polyup originality water_bottles
-```
+## Agents (no duplication)
 
-Access can also be configured via `problems/<name>/access.json`:
-
-```json
-{"user1": "WRITE", "user2": "READ"}
-```
-
-> **Note:** The Polygon API does not support access management — `polyup` prints a reminder to set permissions manually in the Polygon web UI.
-
-## Build locally
-
-Prefer `./verify.sh problems/<name>` over ad-hoc compiles. Manual equivalent:
-
-```bash
-cd problems/<name>
-g++ -std=c++17 -O2 -Wall -Wextra -Werror -I ../../testlib -o validator validator.cpp
-g++ -std=c++17 -O2 -Wall -Wextra -Werror -I ../../testlib -o checker checker.cpp
-g++ -std=c++17 -O2 -Wall -Wextra -Werror -I ../../testlib -o gen generators/generator.cpp
-```
-
-## AI tool support
-
-**One shared file:** `.claude/shared.md` (roster, layout, pipeline, critical rules).
-
-**Role stubs:** `.claude/agents/<role>.md` (only that role’s contract). Each stub starts with “Read `.claude/shared.md` first.”
-
-Do not paste shared rules into every agent. `python sync-ai-configs.py` (also the pre-commit hook) copies `shared.md` into Cursor’s always-on rule and concatenates role stubs for Codex / Copilot / Windsurf / Antigravity.
-
-| Tool | Config location |
+| File | Role |
 |---|---|
-| Cursor | `.cursor/rules/*.mdc` |
+| [`.claude/shared.md`](.claude/shared.md) | Roster, layout, pipeline, critical rules — **edit here** |
+| [`.claude/agents/<role>.md`](.claude/agents/) | That role’s output contract only (“Read `shared.md` first”) |
+| `guidelines.md`, `tutorials/` | Long checklists — Read on demand |
+
+| Agent | Produces |
+|---|---|
+| `orchestrator` | Runs the pipeline; do not call other agents except through this |
+| `statement-agent` | `statement.tex`, `tutorial.tex` |
+| `validator-agent` | `validator.cpp` |
+| `checker-agent` | Standard checker or `checker.cpp` |
+| `interactor-agent` | `interactor.cpp` |
+| `solutions-agent` | `acc.cpp`, `acc_java.java`, `acc_alt.cpp`, `brute.cpp`, `wa.cpp` |
+| `generator-agent` | `generators/generator.cpp` |
+| `reviewer-agent` | Full review; FAIL blocks |
+
+```bash
+python sync-ai-configs.py
+```
+
+| Tool | Generated from shared + stubs |
+|---|---|
+| Cursor | `.cursor/rules/*.mdc` (`00-project.mdc` = `shared.md`) |
 | GitHub Copilot | `.github/copilot-instructions.md` |
 | OpenAI Codex | `AGENTS.md` |
 | Windsurf | `.windsurfrules` |
 | Google Antigravity | `.agents/skills/*/SKILL.md` |
 
+## Repository layout
+
+```
+.claude/shared.md              ← single copy of shared rules
+.claude/agents/                ← thin role stubs
+.claude/commands/              ← /generate-problem, /fix-component
+polyup/                        ← Polygon API + originality
+verify.sh
+docs/workflow.md
+docs/verify.md
+guidelines.md
+tutorials/
+templates/
+problems/                      ← generated (gitignored)
+testlib/
+sync-ai-configs.py
+```
+
 ## References
 
-- [Validators tutorial](https://codeforces.com/blog/entry/18426)
-- [Checkers tutorial](https://codeforces.com/blog/entry/18431)
-- [Generators tutorial](https://codeforces.com/blog/entry/18291)
-- [Interactors tutorial](https://codeforces.com/blog/entry/18455)
-- [testlib.h overview](https://codeforces.com/blog/entry/18289)
-- [Polygon statements manual](https://polygon.codeforces.com/docs/statements-tex-manual)
-- [Polygon API documentation](https://docs.google.com/document/d/1mb6CDENEIpkkB_RV-gEy3PQfLBflCqZcD1UJ4f10hGA)
 - [Problem preparation checklist](https://7oskaaa.github.io/problem-guideline/)
 - [Is my problem new? (yuantiji)](http://yuantiji.ac/en/)
-- [Workflow (local → Polygon, how to prompt fixes)](docs/workflow.md)
-- [verify.sh](docs/verify.md)
+- [Workflow](docs/workflow.md) · [verify.sh](docs/verify.md)
+- [Validators](https://codeforces.com/blog/entry/18426) · [Checkers](https://codeforces.com/blog/entry/18431) · [Generators](https://codeforces.com/blog/entry/18291) · [Interactors](https://codeforces.com/blog/entry/18455)
+- [testlib.h](https://codeforces.com/blog/entry/18289) · [Polygon statements](https://polygon.codeforces.com/docs/statements-tex-manual) · [Polygon API](https://docs.google.com/document/d/1mb6CDENEIpkkB_RV-gEy3PQfLBflCqZcD1UJ4f10hGA)
