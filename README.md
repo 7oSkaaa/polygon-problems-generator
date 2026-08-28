@@ -35,10 +35,13 @@ cd polygon-problems-generator
 git config core.hooksPath .githooks
 
 cp .env.example .env
-# POLYGON_API_KEY and POLYGON_API_SECRET
+# POLYGON_API_KEY / POLYGON_API_SECRET
+# optional: POLYGON_DEFAULT_ACCESS=alice:WRITE,bob:WRITE
 ```
 
 The pre-commit hook runs `sync-ai-configs.py` from [`.claude/shared.md`](.claude/shared.md) + [`.claude/agents/`](.claude/agents/).
+
+Always grant the same writers on every upload with `POLYGON_DEFAULT_ACCESS` or a repo-root `access.json`. Per-problem overrides: `problems/<name>/access.json`.
 
 ## Generate a problem
 
@@ -94,6 +97,53 @@ problems/<name>/
 ├── tags.txt                   ← #topic and #difficulty
 ├── difficulty.txt
 └── originality.json
+```
+
+## C++ solutions
+
+Use `templates/solutions/solution.cpp`: C++17, `bits/stdc++.h`, `solve()`, no `#define` macros, no GCC pragmas. Uncomment `cin >> test_cases` for multi-test. Interactive solutions must not use `sync_with_stdio(false)` or `cin.tie(nullptr)`.
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+void solve() {
+}
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int test_cases = 1;
+    // cin >> test_cases;
+    while (test_cases--) {
+        solve();
+    }
+    return 0;
+}
+```
+
+## Java solutions
+
+Use `templates/solutions/solution.java`: `Scanner`, `solve()`, no extra helpers. Rename the class to `acc_java` in `acc_java.java`. Uncomment `testCases = in.nextInt()` for multi-test.
+
+```java
+import java.util.Scanner;
+
+public class solution {
+    static Scanner in = new Scanner(System.in);
+
+    static void solve() {
+    }
+
+    public static void main(String[] args) {
+        int testCases = 1;
+        // testCases = in.nextInt();
+        while (testCases-- > 0) {
+            solve();
+        }
+    }
+}
 ```
 
 ## Local verify

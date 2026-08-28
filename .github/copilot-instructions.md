@@ -93,6 +93,8 @@ Fixes: regenerate **only** the failing component (`/fix-component`). Paste the `
 - Digit separators: `100'000` not `100000`
 - Distinct solution bases: `acc`, `acc_java`, `acc_alt`, `brute`, `wa`
 - No `#pragma GCC optimize` (or similar) in solutions
+- C++ solutions use the minimal C++17 template (`templates/solutions/solution.cpp`) — no `#define` macros
+- Java solutions use the minimal template (`templates/solutions/solution.java`) — `Scanner` + `solve()`, no extra helpers
 - Main ACC is clear and relaxed — do not set the time limit from a micro-optimized code
 - Statements stay short; avoid long stories; hide the algorithm
 - Images: EPS only, with a bounding box — never JPG/PNG

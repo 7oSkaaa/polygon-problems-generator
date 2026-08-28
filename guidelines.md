@@ -194,8 +194,8 @@ Uses `testlib.h` — validates every test satisfies problem constraints before u
 | `wa.cpp` | WA | Produces incorrect output for some inputs |
 
 **Checklist:**
-- [ ] `acc.cpp` — correct C++ solution, not over-optimized
-- [ ] `acc_java.java` — correct Java solution (class name must match the file name)
+- [ ] `acc.cpp` — correct C++ solution, not over-optimized; minimal C++17 template (no `#define` macros)
+- [ ] `acc_java.java` — correct Java solution; minimal `Scanner` template; class name must match the file name
 - [ ] `acc_alt.cpp` — second ACC, different approach
 - [ ] `brute.cpp` — intentionally slow (TLE), or WA on interactive problems
 - [ ] `wa.cpp` — intentionally wrong solution (WA)

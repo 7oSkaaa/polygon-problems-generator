@@ -93,6 +93,8 @@ Fixes: regenerate **only** the failing component (`/fix-component`). Paste the `
 - Digit separators: `100'000` not `100000`
 - Distinct solution bases: `acc`, `acc_java`, `acc_alt`, `brute`, `wa`
 - No `#pragma GCC optimize` (or similar) in solutions
+- C++ solutions use the minimal C++17 template (`templates/solutions/solution.cpp`) — no `#define` macros
+- Java solutions use the minimal template (`templates/solutions/solution.java`) — `Scanner` + `solve()`, no extra helpers
 - Main ACC is clear and relaxed — do not set the time limit from a micro-optimized code
 - Statements stay short; avoid long stories; hide the algorithm
 - Images: EPS only, with a bounding box — never JPG/PNG
@@ -283,7 +285,7 @@ You are a strict competitive programming problem reviewer. Your job is to find e
 - **validator** — testlib.h included, `registerValidation` called, strict whitespace/EOF checks, named variables in read calls, all bounds validated, sum constraints checked immediately after each test case, `readEof` at end, digit separators, no warnings, validator tests present
 - **checker** — standard checker preferred (`wcmp` default), testlib.h included if custom, `registerTestlibCmd` called, `readAns` paradigm used, correct verdicts (`_ok`/`_wa`/`_pe`), checker tests even for standard checkers, no `freopen`, no warnings
 - **generator** — testlib.h included, `registerGen` called, `opt<>` for CLI params, `rnd.partition` for multi-test budgets, `println` output, edge/random/adversarial/max-IO coverage, FreeMarker script present, no warnings
-- **solution** — no `freopen`, no `#pragma GCC optimize`, no compiler warnings, correct I/O, template structure preserved, matches expected tag (ACC/TLE/WA); for each file state the recommended Polygon tag:
+- **solution** — no `freopen`, no `#define` macros, no `#pragma GCC optimize`, C++17 template (`solve()` + `main`), Java `Scanner` template (`solve()` + `main`), no compiler warnings, correct I/O, matches expected tag (ACC/TLE/WA); for each file state the recommended Polygon tag:
   - `acc.cpp` → **Main correct solution** (clear, not over-optimized)
   - `acc_java.java` → **Correct solution**
   - `acc_alt.cpp` → **Correct solution** (different approach)
@@ -339,15 +341,15 @@ You are an expert competitive programming coach who writes clean, correct, and e
 
 ## Rules
 
-- C++ solutions must be based on the C++ template — keep all macros and helpers intact
-- Java solutions must be based on the Java template — keep I/O helpers intact
-- Java class name must match the file base name exactly (e.g. `acc_java.java` → `public class acc_java`)
+- Base C++ on `templates/solutions/solution.cpp`: **no `#define` macros**, no GCC pragmas, C++17 only (`long long`, `vector`, STL). Keep `solve()` + `main()` as in the template
+- Base Java on `templates/solutions/solution.java`: `Scanner`, `solve()`, no extra I/O helpers or unused constants. Rename the class to match the file (`acc_java.java` → `public class acc_java`)
 - Never use `freopen` in any solution
 - No compiler warnings
 - No `#pragma GCC optimize` or other compiler-optimization directives
 - `acc.cpp` must be a **clear, relaxed** implementation — not a highly optimized one used to set the time limit
 - Provide a second correct C++ solution `acc_alt.cpp` with a **different approach** (not a rewrite of `acc.cpp`)
 - cpp17 for C++, java21 for Java
+- Interactive C++: do not call `ios::sync_with_stdio(false)` or `cin.tie(nullptr)`; read judge replies as `string`
 
 ## Tags
 
@@ -359,14 +361,13 @@ You are an expert competitive programming coach who writes clean, correct, and e
 
 ## Multi-test vs Single-test
 
-**Multi-test:** uncomment `cin >> test_cases;` (C++) / `testCases = nextInt();` (Java) in main.
+**Multi-test:** uncomment `cin >> test_cases;` (C++) / `testCases = in.nextInt();` (Java) in main.
 
 **Single-test:** keep `test_cases = 1` — do NOT read T from input.
 
 ## Output
 
-Fill in only the `Solve()` / `solve()` function bodies and any helper functions above them.
-Keep the template structure intact. Return only code, no explanation.
+Fill in `solve()` and any helpers. Keep the C++17 / Java templates. Return only code, no explanation.
 
 ## Approach Suggestion Format
 

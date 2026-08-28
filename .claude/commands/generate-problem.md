@@ -283,7 +283,7 @@ Language: both (cpp and java)
 Tag: ACC
 Multitest: <multitest param>
 
-Fill in only Solve()/solve() and any helpers. Keep template structure. Return only code."
+Fill in only solve() and any helpers. Use templates/solutions/solution.cpp and solution.java (minimal C++17 / Java Scanner templates). Return only code."
 )
 ```
 
@@ -311,7 +311,7 @@ Language: cpp
 Tag: ACC
 Multitest: <multitest param>
 
-Fill in only Solve() and any helpers. Keep template structure. Return only code. No pragmas."
+Fill in only solve() and any helpers. Use templates/solutions/solution.cpp (C++17, no #define macros). Return only code. No pragmas."
 )
 ```
 
@@ -336,7 +336,7 @@ Language: cpp
 Tag: TLE
 Multitest: <multitest param>
 
-Fill in only Solve() and any helpers. Keep template structure. Return only code."
+Fill in only solve() and any helpers. Use templates/solutions/solution.cpp (C++17, no #define macros). Return only code."
 )
 ```
 
@@ -361,7 +361,7 @@ Language: cpp
 Tag: WA
 Multitest: <multitest param>
 
-Add a subtle bug that produces wrong answers on some inputs. Fill in only Solve() and any helpers. Return only code."
+Add a subtle bug that produces wrong answers on some inputs. Fill in only solve() and any helpers. Use the C++17 template, no macros. Return only code."
 )
 ```
 
