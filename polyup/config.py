@@ -35,6 +35,6 @@ class SyncConfig:
     verify_package: bool = True
     solution_tags: dict[str, str] = field(default_factory=lambda: dict(SOLUTION_TAGS))
     source_types: dict[str, str] = field(default_factory=lambda: dict(SOURCE_TYPES))
-    # ponytail: Polygon API has no access endpoint; store here, print reminder after sync
-    # Format: {"username": "READ|WRITE", ...}
+    # login → READ | WRITE | NONE  (applied via problem.setAccess)
     access: dict[str, str] = field(default_factory=dict)
+    grant_access: bool = True

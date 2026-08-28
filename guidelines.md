@@ -280,7 +280,7 @@ Then on Polygon:
 - **Invocations** → run all solutions against all tests, verify verdicts match expected types
 - Check time/memory usage, adjust limits if needed — calibrate against the **relaxed** main ACC, not a micro-optimized one
 - **Package** → Standard (reproducible, generators + checker) or Full (pre-generated tests)
-- Grant `codeforces` user access → add to Mashup via Polygon link
+- Grant WRITE/READ via `python -m polyup <name> --access user:WRITE` (or `POLYGON_DEFAULT_ACCESS` / `access.json`)
 
 ---
 

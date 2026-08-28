@@ -54,10 +54,12 @@ class PolygonAPI:
             sys.exit(1)
         if data.get("status") != "OK":
             msg = data.get("comment", data)
+            print(f"  API error [{method}]: {msg}", file=sys.stderr)
             if not fatal:
                 return None
-            print(f"  API error [{method}]: {msg}", file=sys.stderr)
             sys.exit(1)
 
         time.sleep(self.delay)
+        if "result" not in data:
+            return True
         return data.get("result")

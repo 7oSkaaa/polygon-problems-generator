@@ -44,6 +44,10 @@ def sync_problem(
 
     if dry_run:
         print("[dry-run] would sync all components")
+        if config.grant_access and config.access:
+            print("[dry-run] would grant access:")
+            for user, level in config.access.items():
+                print(f"  {user}: {level}")
         return
 
     _sync_working_copy(api, pid)
@@ -55,11 +59,15 @@ def sync_problem(
     _sync_interactor(api, pid, problem_dir, config)
     _sync_solutions(api, pid, problem_dir, config)
     _sync_validator_tests(api, pid, problem_dir)
+    _sync_checker_tests(api, pid, problem_dir)
     _sync_generators(api, pid, problem_dir, config)
     _sync_tests(api, pid, problem_dir)
     _sync_tags(api, pid, problem_dir)
-    _sync_difficulty(api, pid, problem_dir)
+    _sync_note(api, pid, problem_dir)
     _commit_and_build(api, pid, config)
+    if config.grant_access:
+        _sync_access(api, pid, config)
+    _print_cautions(api, pid)
 
     url = f"https://polygon.codeforces.com/edit-problem?problemId={problem_id}"
     print(f"\nDone! {url}")
@@ -69,12 +77,16 @@ def sync_problem(
     print("  • testlib.h → check 'Auto update'")
     print("  • checker   → check 'Auto update'")
 
-    if config.access:
-        print("\n⚠ Grant access manually (no API support):")
-        print(f"  {url}/accessEdit")
-        for user, level in config.access.items():
-            print(f"  • {user}: {level}")
 
+
+def _time_limit_ms(ms: int) -> int:
+    """Polygon requires timeLimit in [250, 15000] and divisible by 50."""
+    value = max(250, min(15_000, int(ms)))
+    rounded = int(round(value / 50) * 50)
+    rounded = max(250, min(15_000, rounded))
+    if rounded != ms:
+        print(f"  timeLimit {ms} ms adjusted to {rounded} (must be ÷50, 250–15000)")
+    return rounded
 
 
 def _sync_working_copy(api: PolygonAPI, pid: dict):
@@ -86,7 +98,7 @@ def _sync_info(api: PolygonAPI, pid: dict, config: SyncConfig, interactive: bool
     print("Setting problem info...")
     api.call(
         "problem.updateInfo", **pid,
-        timeLimit=str(config.time_limit_ms),
+        timeLimit=str(_time_limit_ms(config.time_limit_ms)),
         memoryLimit=str(config.memory_limit_mb),
         interactive=str(interactive).lower(),
         inputFile=config.input_file,
@@ -200,7 +212,7 @@ def _sync_validator_tests(api: PolygonAPI, pid: dict, problem_dir: Path):
     new_count = len(files)
     for i, vt_file in enumerate(files, 1):
         verdict = "VALID" if vt_file.name.startswith("valid") else "INVALID"
-        content = vt_file.read_text().rstrip("\r\n") + "\r\n"
+        content = _crlf(vt_file.read_text())
         print(f"Uploading validator test {i} ({verdict}): {vt_file.name}")
         api.call(
             "problem.saveValidatorTest", **pid,
@@ -211,6 +223,49 @@ def _sync_validator_tests(api: PolygonAPI, pid: dict, problem_dir: Path):
         if api.call("problem.deleteValidatorTest", **pid,
                      testset="tests", testIndex=str(j), fatal=False) is None:
             break
+
+
+_CHECKER_VERDICTS = {
+    "ok": "OK",
+    "wa": "WRONG_ANSWER",
+    "wrong_answer": "WRONG_ANSWER",
+    "pe": "PRESENTATION_ERROR",
+    "presentation_error": "PRESENTATION_ERROR",
+    "crashed": "CRASHED",
+}
+
+
+def _sync_checker_tests(api: PolygonAPI, pid: dict, problem_dir: Path):
+    """Upload checker_tests/<stem>.in + .out + .ans; stem starts with ok_/wa_/pe_/crashed_."""
+    ctests_dir = problem_dir / "checker_tests"
+    if not ctests_dir.exists():
+        return
+    stems = sorted({p.stem for p in ctests_dir.glob("*.in")})
+    for i, stem in enumerate(stems, 1):
+        inp = ctests_dir / f"{stem}.in"
+        out = ctests_dir / f"{stem}.out"
+        ans = ctests_dir / f"{stem}.ans"
+        if not out.exists() or not ans.exists():
+            print(f"  skip checker test {stem}: need .in, .out, and .ans")
+            continue
+        prefix = stem.split("_", 1)[0].lower()
+        verdict = _CHECKER_VERDICTS.get(prefix)
+        if not verdict:
+            print(f"  skip checker test {stem}: name must start with ok_/wa_/pe_/crashed_")
+            continue
+        print(f"Uploading checker test {i} ({verdict}): {stem}")
+        api.call(
+            "problem.saveCheckerTest", **pid,
+            testIndex=str(i),
+            testVerdict=verdict,
+            testInput=_crlf(inp.read_text()),
+            testOutput=_crlf(out.read_text()),
+            testAnswer=_crlf(ans.read_text()),
+        )
+
+
+def _crlf(text: str) -> str:
+    return text.replace("\r\n", "\n").replace("\n", "\r\n")
 
 
 def _sync_generators(api: PolygonAPI, pid: dict, problem_dir: Path, config: SyncConfig):
@@ -266,15 +321,75 @@ def _sync_tags(api: PolygonAPI, pid: dict, problem_dir: Path):
         api.call("problem.saveTags", **pid, tags=",".join(tags))
 
 
-def _sync_difficulty(api: PolygonAPI, pid: dict, problem_dir: Path):
+def _sync_note(api: PolygonAPI, pid: dict, problem_dir: Path):
+    """problem.saveNote — problem-level note, max 50 chars, no commit needed."""
     diff_path = problem_dir / "difficulty.txt"
     if not diff_path.exists():
         return
     text = diff_path.read_text().strip()
-    if text:
-        level = text.splitlines()[0].strip()
-        print(f"Setting problem note: {level}")
-        api.call("problem.updateInfo", **pid, note=level)
+    if not text:
+        return
+    note = text.splitlines()[0].strip()[:50]
+    print(f"Setting problem note: {note}")
+    api.call("problem.saveNote", **pid, note=note)
+
+
+def _sync_access(api: PolygonAPI, pid: dict, config: SyncConfig):
+    """problem.setAccess — immediate, no commit. WRITE/READ/NONE only."""
+    if not config.access:
+        return
+    print("Granting problem access...")
+    for user, level in config.access.items():
+        print(f"  {user}: {level}")
+        ok = api.call(
+            "problem.setAccess", **pid,
+            login=user, accessType=level, fatal=False,
+        )
+        if ok is None:
+            print(f"    ⚠ setAccess failed for {user} ({level})")
+    _print_accesses(api, pid)
+
+
+def _print_accesses(api: PolygonAPI, pid: dict):
+    entries = api.call("problem.accesses", **pid, fatal=False)
+    if not entries:
+        return
+    print("  Current direct access:")
+    for entry in entries:
+        print(f"    {entry.get('login')}: {entry.get('accessType')}")
+
+
+def grant_access(api: PolygonAPI, problem_id: str, access: dict[str, str]):
+    pid = {"problemId": str(problem_id)}
+    config = SyncConfig(access=access, grant_access=True)
+    _sync_access(api, pid, config)
+
+
+def list_accesses(api: PolygonAPI, problem_id: str):
+    _print_accesses(api, {"problemId": str(problem_id)})
+
+
+def _print_cautions(api: PolygonAPI, pid: dict):
+    data = api.call("problem.cautions", **pid, fatal=False)
+    if not data:
+        return
+    hard = []
+    for key in ("common", "statement", "structure", "issues"):
+        for item in data.get(key) or []:
+            if (item.get("severity") or "").upper() == "HARD":
+                hard.append(item.get("message") or item.get("type"))
+    ready = data.get("packageReadinessIssues") or []
+    warns = data.get("latestPackageWarnings") or []
+    if not hard and not ready and not warns:
+        print("Cautions: none (HARD)")
+        return
+    print("Polygon cautions:")
+    for msg in hard:
+        print(f"  HARD  {msg}")
+    for issue in ready:
+        print(f"  READY {issue.get('message') or issue.get('type')}")
+    for warn in warns[:8]:
+        print(f"  PKG   {warn}")
 
 
 def _commit_and_build(api: PolygonAPI, pid: dict, config: SyncConfig):

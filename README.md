@@ -134,23 +134,40 @@ python -m polyup water_bottles --dry-run
 python -m polyup water_bottles --time-limit 2000 --memory-limit 512
 python -m polyup water_bottles --no-build
 python -m polyup water_bottles --access user1:WRITE user2:READ
+python -m polyup access water_bottles --list
+python -m polyup access water_bottles --access alice:WRITE
 ```
 
-Uploads metadata, statement, tutorial, validator, checker, interactor, solutions (`acc` = MA, `acc_java` / `acc_alt` = OK, `brute` = TL or WA if interactive, `wa` = WA), generator + FreeMarker script, validator tests, tags; then commits and builds the package (`verify=true` unless `--no-verify`).
+Uploads metadata, statement, tutorial, validator, checker, interactor, solutions (`acc` = MA, `acc_java` / `acc_alt` = OK, `brute` = TL or WA if interactive, `wa` = WA), generator + FreeMarker script, validator tests, checker tests (if present), tags; then commits, builds the package (`verify=true` unless `--no-verify`), grants access, and prints HARD cautions.
 
 | Option | Default | Description |
 |---|---|---|
 | `--dry-run` | — | Print what would be uploaded |
-| `--time-limit` | 1000 | Time limit (ms) |
+| `--time-limit` | 1000 | Time limit (ms); rounded to a multiple of 50 in 250–15000 |
 | `--memory-limit` | 256 | Memory limit (MB) |
 | `--lang` | english | Statement language |
 | `--commit-message` | `polyup auto-upload` | Polygon commit message |
 | `--api-delay` | 0.3 | Seconds between API calls |
 | `--no-build` | — | Skip package build |
 | `--no-verify` | — | Build without Polygon verification |
-| `--access` | — | Reminder only (`user:WRITE`) |
+| `--access` | — | Grant `READ`/`WRITE` via [`problem.setAccess`](https://codeforces.github.io/polygon-misc/API#problemsetaccess) (`NONE` revokes) |
+| `--no-access` | — | Skip access grants |
 
-Access can also live in `problems/<name>/access.json`. The Polygon API cannot set access; set it in the web UI.
+Access is merged in this order (later wins): `POLYGON_DEFAULT_ACCESS` in `.env`, repo-root `access.json`, `problems/<name>/access.json`, then `--access`. Example `.env`:
+
+```
+POLYGON_DEFAULT_ACCESS=alice:WRITE,bob:WRITE
+```
+
+Example `access.json`:
+
+```json
+{"alice": "WRITE", "bob": "READ"}
+```
+
+`problem.setAccess` takes effect immediately (no commit). It cannot assign `OWNER` or `@group` logins. You need **direct** WRITE or OWNER on the problem.
+
+Checker tests (optional) live in `checker_tests/` as `ok_sample.in` + `.out` + `.ans` (prefixes: `ok_`, `wa_`, `pe_`, `crashed_`).
 
 ## Agents (no duplication)
 
