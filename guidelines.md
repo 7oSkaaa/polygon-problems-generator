@@ -117,6 +117,7 @@ Structure: **Legend → Input Format → Output Format → Notes** (plus **Inter
 
 **Checklist:**
 - [ ] Keep the statement **short and simple** — avoid long stories; they tend to change and hide the task
+- [ ] Legend and tutorial read like a person: simple English, clear task, not chatbot filler
 - [ ] **Main algorithmic idea is hidden** — describe *what* to compute, never *how*. Never name the required algorithm, data structure, or technique.
 - [ ] All variables written inside `$LaTeX math mode$`
 - [ ] Statement is **renderable to PDF** on Polygon

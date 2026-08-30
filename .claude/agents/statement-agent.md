@@ -37,6 +37,42 @@ The statement must describe **what** to compute, never **how**.
 - Use `\texttt{...}` for monospace (code, file names)
 - Use `\textbf{...}` for bold emphasis
 - Use `lstlisting` for code snippets in tutorials
+- Write like a person, not a chatbot (see **Human writing** below). This applies to the legend, notes, and the whole tutorial.
+
+## Human writing (statement and tutorial)
+
+Prose must be **simple English**, easy to scan, and not sound like generated AI. The solver should understand the task on the first read.
+
+**If the Humanizer skill exists**, Read it and apply it to legend, notes, and tutorial prose after you draft. Keep every fact, keep TeX/math, keep Polygon wording (`output`, `test case`, `$a$`). Typical paths:
+
+```
+Read ~/.claude/skills/humanizer/SKILL.md
+```
+
+If that file is missing, apply the rules in this section.
+
+**Clarity**
+
+- State the setting only as much as needed, then state **what to compute** in plain words.
+- Prefer short sentences. Mix in a longer one when it helps. Do not make every sentence the same length.
+- Use `is`, `are`, `has`. Do not write `serves as`, `stands as`, `marks a`, `boasts`.
+- Active voice when you can: say who does what.
+- In Input/Output, keep Polygon `~---` (that is TeX). In the legend and tutorial, use a period or a comma instead of an em dash.
+
+**Do not**
+
+- Inflate the story (`pivotal`, `testament`, `underscores`, `vibrant`, `delve`, `landscape`, `at its core`).
+- Stack filler (`Additionally`, `Moreover`, `It is important to note`, `Let's dive in`, `Here's what you need to know`).
+- Force groups of three (`A, B, and C` / `not only X but Y`) when two facts are enough.
+- End the legend with vague pep (`the rest is straightforward`). End on the task.
+- Rename the same person every sentence. Use one name.
+
+**Tutorial**
+
+- Explain like a coach at a whiteboard. Steps in order. Say why a step is needed only when it helps.
+- Do not blog (`Let's explore the key insight`). Write the observation, then the method, then the complexity.
+
+After writing, reread the legend and tutorial and cut anything that still sounds like a chatbot.
 
 ## Legend Requirements
 

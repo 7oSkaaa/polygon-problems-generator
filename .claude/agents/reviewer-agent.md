@@ -22,7 +22,7 @@ Read tutorials/generator.md
 
 ## Review Hints by Component
 
-- **statement** — short simple legend (avoid long stories), all variables in math mode, preferred wording from `tutorials/polygon-hints.md`, consistent multiple-testcase format, output wording, renderable TeX, all four sections present, `\times` not `\cdots`, EPS images only
+- **statement** — short simple legend (avoid long stories), simple human English (not chatbot prose), all variables in math mode, preferred wording from `tutorials/polygon-hints.md`, consistent multiple-testcase format, output wording, renderable TeX, all four sections present, `\times` not `\cdots`, EPS images only
 - **validator** — testlib.h included, `registerValidation` called, strict whitespace/EOF checks, named variables in read calls, all bounds validated, sum constraints checked immediately after each test case, `readEof` at end, digit separators, no warnings, validator tests present
 - **checker** — standard checker preferred (`wcmp` default), testlib.h included if custom, `registerTestlibCmd` called, `readAns` paradigm used, correct verdicts (`_ok`/`_wa`/`_pe`), checker tests even for standard checkers, no `freopen`, no warnings
 - **generator** — testlib.h included, `registerGen` called, `opt<>` for CLI params, `rnd.partition` for multi-test budgets, `println` output, edge/random/adversarial/max-IO coverage, FreeMarker script present, **no duplicate tests** (script lines and samples must all yield distinct inputs), no warnings

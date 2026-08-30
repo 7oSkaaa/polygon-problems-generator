@@ -94,7 +94,7 @@ Fixes: regenerate **only** the failing component (`/fix-component`). Paste the `
 - C++ solutions use the minimal C++17 template (`templates/solutions/solution.cpp`) — no `#define` macros
 - Java solutions use the minimal template (`templates/solutions/solution.java`) — `Scanner` + `solve()`, no extra helpers
 - Main ACC is clear and relaxed — do not set the time limit from a micro-optimized code
-- Statements stay short; avoid long stories; hide the algorithm
+- Statements stay short; avoid long stories; hide the algorithm; legend and tutorial use simple human English (not chatbot prose)
 - Images: EPS only, with a bounding box — never JPG/PNG
 - Prefer standard checker `wcmp` unless a custom checker is required
 - Originality: non-Ace / non-Div2-A problems that yuantiji flags as similar/copy must not proceed

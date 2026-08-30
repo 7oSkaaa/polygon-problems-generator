@@ -20,6 +20,17 @@ Every statement has these sections in Polygon:
 
 Example tests are pulled directly from the actual test cases — mark them with "Use in statements" in the Tests page.
 
+## Human writing
+
+Legend, notes, and `tutorial.tex` must be easy to read. Simple English. No chatbot cadence.
+
+If `~/.claude/skills/humanizer/SKILL.md` exists, apply that skill to the prose after the first draft (keep TeX and math). If it does not, still:
+
+- Short sentences, mixed length. `is` / `are` / `has`.
+- No sales or essay filler (`pivotal`, `Additionally`, `Let's explore`).
+- The last sentence of the legend is the task, not a pep line.
+- Tutorial: ordered steps, like explaining to a contestant next to you.
+
 ---
 
 ## Interactive Problems — Interaction Section

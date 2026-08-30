@@ -93,6 +93,7 @@ Sample tests:
 <sample tests param>
 
 IMPORTANT: The main algorithmic idea must be hidden. Describe what to compute — never name or hint at the required algorithm, data structure, or technique. Keep the legend short and simple; avoid long stories.
+IMPORTANT: Write simple, clear English that does not sound AI-generated. If the Humanizer skill is available, Read it and apply it to the legend and notes. Otherwise follow the Human writing section in the statement-agent contract: short sentences, is/are/has, no filler (Additionally, delve, pivotal, let's dive), no forced groups of three.
 IMPORTANT: Apply tutorials/polygon-hints.md as a checklist. Use consistent multiple-testcase wording, prefer 'output' over 'print', keep definitions in logical order, and ensure all TeX is Polygon-renderable. Use \\times for multiplication. Images must be EPS.
 
 Return the statement in sections: === TITLE === / === LEGEND === / === INPUT === / [=== INTERACTION === if interactive] / === OUTPUT === / === NOTES ===
@@ -146,6 +147,7 @@ Solution approach: <solution param>
 Constraints: <constraints param>
 
 Apply tutorials/polygon-hints.md. Keep TeX renderable by Polygon and use consistent terminology from the statement.
+Write the tutorial in simple human English (coach at a whiteboard, not a blog). If the Humanizer skill is available, Read it and apply it to the tutorial prose.
 
 Return the tutorial in four sections: === KEY OBSERVATIONS === / === SOLUTION === / === COMPLEXITY === / === NOTES ==="
 )

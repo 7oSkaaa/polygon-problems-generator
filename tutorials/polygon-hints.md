@@ -31,6 +31,16 @@ Prefer:
 
 Use italic text only when defining a function/property such as beauty, score, or a good array.
 
+## Human writing
+
+Legend, notes, and tutorial prose should read like a person, not a chatbot. Use simple English. State the task clearly.
+
+- Prefer `is` / `are` / `has` over `serves as` / `stands as`.
+- Avoid filler: `Additionally`, `Moreover`, `It is important to note`, `Let's dive in`, `at its core`, `delve`, `pivotal`, `testament`, `vibrant`.
+- Do not force lists of three when two facts are enough.
+- Keep Polygon `~---` in Input/Output TeX. In the legend, use a period or a comma instead of an em dash.
+- If a Humanizer skill is on disk (`~/.claude/skills/humanizer/SKILL.md`), apply it to the prose after drafting.
+
 ## Multiple Test Cases
 
 Use one consistent input format inside a problem. Prefer this format:
