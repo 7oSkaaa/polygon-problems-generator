@@ -17,12 +17,13 @@ What it does:
 
 0. Static checks (no `#pragma GCC optimize`, legal file names)
 1. Originality search (`python -m polyup originality <name>`) — blocks similar/copy except Ace / Div2-A
-2. Compile validator, generator, checker, interactor, solutions with `g++ -std=c++17 -Wall -Wextra -Werror`
-3. Run `validator_tests/` (`valid*` must pass, others must fail)
-4. Validate samples + a handful of generator outputs
-5. Run `acc.cpp`; compare samples; Java and `acc_alt.cpp` vs checker
-6. Confirm `wa.cpp` is rejected on at least one test
-7. Stress `acc` vs `brute` on small random tests (non-interactive)
+2. Compile validator, generator, checker, interactor, solutions with `g++ -std=c++17 -Wall -Wextra -Werror`, and Java ACC with JDK 21 (`./scripts/setup-deps.sh` if `javac` is missing; macOS stub `javac` does not count)
+3. Run generator script lines from the FreeMarker comment and **fail if two tests (or a test and a sample) are equal**
+4. Run `validator_tests/` (`valid*` must pass, others must fail)
+5. Validate samples + a handful of generator outputs
+6. Run `acc.cpp`; compare samples; Java and `acc_alt.cpp` vs checker
+7. Confirm `wa.cpp` is rejected on at least one test
+8. Stress `acc` vs `brute` on small random tests (non-interactive)
 
 After a green run:
 

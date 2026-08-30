@@ -244,11 +244,17 @@ Uses `testlib.h` — validates every test satisfies problem constraints before u
     generator -n ${MAXN - 1} -k ${MAXN} > $
 ```
 
+- **No duplicate tests.** Polygon fails with `Tests with indices X, Y in testset 'tests' are equal` if two generated (or sample) files are identical. Each script line must yield a unique input:
+  - Pin **every** variable on a boundary line (`-n 1 -k 1`), never `-n 1` plus unconstrained random `k` on a small domain
+  - Do not list equivalent commands that print the same file (e.g. `-type zeros` and `-a 0 -b 0`)
+  - Do not regenerate a sample
+  - Random lines need a unique extra seed token
 - **Seed placement**: put the seed number **before** any boolean flags (e.g. `generator ${seed} -small`), never after — testlib's opt parser would otherwise consume the seed as the flag's value
 
 **Checklist:**
 - [ ] Tests cover **edge cases** (min/max values, n=1)
 - [ ] Every variable hits its **minimum and maximum** value in at least one test
+- [ ] **No two tests are equal** (script vs script, or script vs sample) — Polygon unique-test warning is a FAIL
 - [ ] Use **generators** for bulk test cases
 - [ ] Use **different generators** for variety
 - [ ] Include **1-2 hand-crafted edge cases**

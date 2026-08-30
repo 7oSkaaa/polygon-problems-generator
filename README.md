@@ -24,13 +24,17 @@ idea → /generate-problem → originality → ./verify.sh → python -m polyup 
 
 - Claude Code and/or Cursor
 - Git, Python 3.10+ (`polyup`, `sync-ai-configs.py`)
-- `g++` with C++17 (and `javac` for Java ACC)
+- `g++` with C++17
+- JDK 21 (`javac` / `java`) for Java ACC — macOS `/usr/bin/javac` is a stub and is not enough
 
 ## Setup
 
 ```bash
 git clone https://github.com/7oSkaaa/polygon-problems-generator.git
 cd polygon-problems-generator
+
+./scripts/setup-deps.sh          # g++ + OpenJDK 21 (Homebrew / apt / dnf / pacman)
+# ./scripts/setup-deps.sh --check  # report only; exit 1 if something is missing
 
 git config core.hooksPath .githooks
 

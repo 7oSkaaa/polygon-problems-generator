@@ -25,6 +25,13 @@ Apply the generator and stress guidance from `tutorials/polygon-hints.md`, espec
 - Add a comment line at the top of the script block that states the executable name, e.g. `Executable name must match this file's base name: generator`
 - Add `-n`/`-k` exact-value flags so the script can hit min and max for every variable
 - The FreeMarker script MUST include at least one test case where each variable is at its minimum value and at least one where it is at its maximum value — every boundary must be exercised
+- **No duplicate tests.** Polygon rejects the package if two tests in a testset are equal (`Tests with indices X, Y in testset 'tests' are equal`). Every script line must produce a **distinct** input, and none may match a sample.
+  - Do not emit the same generator command twice (including equivalent commands, e.g. `-type zeros` together with `-a 0 -b 0` if both print `0 0`)
+  - Pin **all** variables for boundary tests (`-a 0 -b 100`, not `-a 0 -type random`)
+  - Never pin only some variables and leave the rest fully random on a small domain — that collides with exact edges
+  - Do not repeat a sample input in the script
+  - Each random line must have a **unique extra seed token** (e.g. `generator -type random 1 > 10`)
+  - Prefer fully specified distinct tuples when the input space is tiny (Ace / few integers)
 - Compile with cpp17, no warnings
 
 ## Multi-test vs Single-test

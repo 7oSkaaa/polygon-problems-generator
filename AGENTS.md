@@ -100,6 +100,7 @@ Fixes: regenerate **only** the failing component (`/fix-component`). Paste the `
 - Images: EPS only, with a bounding box — never JPG/PNG
 - Prefer standard checker `wcmp` unless a custom checker is required
 - Originality: non-Ace / non-Div2-A problems that yuantiji flags as similar/copy must not proceed
+- Polygon tests must be unique: no two generator-script invocations (and no script test vs a sample) may produce the same input
 
 ## Single vs multi-test vs interactive
 
@@ -164,6 +165,13 @@ Apply the generator and stress guidance from `tutorials/polygon-hints.md`, espec
 - Add a comment line at the top of the script block that states the executable name, e.g. `Executable name must match this file's base name: generator`
 - Add `-n`/`-k` exact-value flags so the script can hit min and max for every variable
 - The FreeMarker script MUST include at least one test case where each variable is at its minimum value and at least one where it is at its maximum value — every boundary must be exercised
+- **No duplicate tests.** Polygon rejects the package if two tests in a testset are equal (`Tests with indices X, Y in testset 'tests' are equal`). Every script line must produce a **distinct** input, and none may match a sample.
+  - Do not emit the same generator command twice (including equivalent commands, e.g. `-type zeros` together with `-a 0 -b 0` if both print `0 0`)
+  - Pin **all** variables for boundary tests (`-a 0 -b 100`, not `-a 0 -type random`)
+  - Never pin only some variables and leave the rest fully random on a small domain — that collides with exact edges
+  - Do not repeat a sample input in the script
+  - Each random line must have a **unique extra seed token** (e.g. `generator -type random 1 > 10`)
+  - Prefer fully specified distinct tuples when the input space is tiny (Ace / few integers)
 - Compile with cpp17, no warnings
 
 ## Multi-test vs Single-test
@@ -284,7 +292,7 @@ You are a strict competitive programming problem reviewer. Your job is to find e
 - **statement** — short simple legend (avoid long stories), all variables in math mode, preferred wording from `tutorials/polygon-hints.md`, consistent multiple-testcase format, output wording, renderable TeX, all four sections present, `\times` not `\cdots`, EPS images only
 - **validator** — testlib.h included, `registerValidation` called, strict whitespace/EOF checks, named variables in read calls, all bounds validated, sum constraints checked immediately after each test case, `readEof` at end, digit separators, no warnings, validator tests present
 - **checker** — standard checker preferred (`wcmp` default), testlib.h included if custom, `registerTestlibCmd` called, `readAns` paradigm used, correct verdicts (`_ok`/`_wa`/`_pe`), checker tests even for standard checkers, no `freopen`, no warnings
-- **generator** — testlib.h included, `registerGen` called, `opt<>` for CLI params, `rnd.partition` for multi-test budgets, `println` output, edge/random/adversarial/max-IO coverage, FreeMarker script present, no warnings
+- **generator** — testlib.h included, `registerGen` called, `opt<>` for CLI params, `rnd.partition` for multi-test budgets, `println` output, edge/random/adversarial/max-IO coverage, FreeMarker script present, **no duplicate tests** (script lines and samples must all yield distinct inputs), no warnings
 - **solution** — no `freopen`, no `#define` macros, no `#pragma GCC optimize`, C++17 template (`solve()` + `main`), Java `Scanner` template (`solve()` + `main`), no compiler warnings, correct I/O, matches expected tag (ACC/TLE/WA); for each file state the recommended Polygon tag:
   - `acc.cpp` → **Main correct solution** (clear, not over-optimized)
   - `acc_java.java` → **Correct solution**

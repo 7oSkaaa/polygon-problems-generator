@@ -98,6 +98,7 @@ Fixes: regenerate **only** the failing component (`/fix-component`). Paste the `
 - Images: EPS only, with a bounding box — never JPG/PNG
 - Prefer standard checker `wcmp` unless a custom checker is required
 - Originality: non-Ace / non-Div2-A problems that yuantiji flags as similar/copy must not proceed
+- Polygon tests must be unique: no two generator-script invocations (and no script test vs a sample) may produce the same input
 
 ## Single vs multi-test vs interactive
 

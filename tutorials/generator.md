@@ -249,6 +249,7 @@ gen -t 10 -sum-n 100 -min-val 1 -max-val 100 [1..50]
 - Enable **auto update** for `testlib.h`
 - No digits or special characters in file names except `_`
 - Generator must be **reproducible** — same args → same output everywhere
+- **No duplicate tests** — two script invocations (or a script test and a sample) must never produce the same input. Polygon reports `Tests with indices X, Y in testset 'tests' are equal`. Pin all variables on edges; unique seed tokens on random lines; do not re-emit sample inputs
 - Use `rnd.partition` for distributing sums, not manual loops
 - Use `println` to avoid trailing spaces
 - FreeMarker script executable name must exactly match the `.cpp` file's base name (e.g. `generator.cpp` → `generator`); never use a generic alias like `gen`

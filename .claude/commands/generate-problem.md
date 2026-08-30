@@ -386,6 +386,8 @@ Desired test variety: random cases, edge cases (min/max values), stress cases
 
 Apply generator guidance from tutorials/polygon-hints.md, including edge/random/adversarial/max-IO coverage and a useful FreeMarker script.
 
+CRITICAL: every FreeMarker script line must produce a UNIQUE input. No two lines (and no line vs a sample) may generate the same test — Polygon reports 'Tests with indices X, Y are equal'. Pin all variables on edge tests; unique seeds on random tests; do not repeat equivalent commands.
+
 Include a FreeMarker script example as a comment block at the end. Return only the C++ code."
 )
 ```

@@ -70,6 +70,8 @@ if [[ ! -d "$PROBLEM_DIR" ]]; then
 fi
 
 REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=scripts/java-env.sh
+source "$REPO_ROOT/scripts/java-env.sh"
 TESTLIB="$REPO_ROOT/testlib/testlib.h"
 STANDARD_CHECKERS="$REPO_ROOT/testlib/checkers"
 CXX="${CXX:-g++}"
@@ -100,6 +102,9 @@ trap cleanup EXIT
 mkdir -p "$BUILD" "$TESTS"
 
 echo -e "${BOLD}Verifying: ${PROBLEM_DIR}${NC}"
+if [[ -n "${JAVAC:-}" ]]; then
+    echo -e "  javac: ${JAVAC}"
+fi
 if [[ "$INTERACTIVE" == true ]]; then
     echo -e "  ${YELLOW}→${NC} interactive problem detected"
 fi
@@ -195,6 +200,11 @@ GEN_SRC=$(find "$PROBLEM_DIR/generators" -name "generator.cpp" 2>/dev/null | hea
 if [[ -n "$GEN_SRC" ]]; then
     if $CXX $CXXFLAGS -o "$BUILD/gen" "$GEN_SRC"; then
         pass "Compiled"
+        if python3 "$REPO_ROOT/scripts/check-gen-uniques.py" "$GEN_SRC" "$BUILD/gen" "$PROBLEM_DIR/samples"; then
+            pass "Script tests unique (no equal inputs vs samples or each other)"
+        else
+            fail "Duplicate generator/sample inputs — Polygon will reject equal tests"
+        fi
     else
         fail "generator.cpp failed to compile"
     fi
@@ -231,14 +241,14 @@ compile_solution() {
     elif [[ "$ext" == "java" ]]; then
         local classname
         classname=$(basename "$src" .java)
-        if command -v javac &>/dev/null; then
-            if javac -Xlint:all -d "$BUILD" "$src"; then
+        if [[ -n "${JAVAC:-}" ]]; then
+            if "$JAVAC" -Xlint:all -d "$BUILD" "$src"; then
                 pass "$classname.java"
             else
                 fail "$classname.java failed to compile"
             fi
         else
-            warn "$classname.java skipped (javac not found)"
+            fail "$classname.java: no working javac (macOS stub does not count). Run ./scripts/setup-deps.sh"
         fi
     fi
 }
@@ -477,7 +487,7 @@ cross_check() {
 }
 
 if [[ -f "$BUILD/acc_java.class" ]]; then
-    cross_check "Java ACC" "run_timed 10 java -cp \"$BUILD\" acc_java"
+    cross_check "Java ACC" "run_timed 10 \"$JAVA\" -cp \"$BUILD\" acc_java"
 else
     header "Java ACC"
     warn "Skipped (no acc_java.class)"

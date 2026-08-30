@@ -170,6 +170,7 @@ Generator guidelines:
 - Prefer opts. Use boolean flags for booleans and `-n=30` style for non-boolean arguments when possible.
 - Remember that the random seed depends on the argument line; adding a number to the argument line creates another test.
 - `opt<int>("n", -1)` reads `-n=*` or returns `-1` if absent.
+- **Unique tests:** every FreeMarker script line must produce a different input from every other line and from every sample. Polygon warns `Tests with indices X, Y are equal` and that is a FAIL. Pin every variable on edge tests; do not combine a pinned min/max with unconstrained random on a small domain; do not run equivalent commands (`-type zeros` vs `-a 0 -b 0`).
 
 ## Originality
 
