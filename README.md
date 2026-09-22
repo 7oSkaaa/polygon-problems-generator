@@ -1,5 +1,7 @@
 # Polygon Problems Generator
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/7oSkaaa/polygon-problems-generator)
+
 AI agents that produce a complete, Polygon-ready competitive programming problem (statement, tutorial, validator, checker, solutions, generator), plus `polyup` to upload it and `verify.sh` to check it locally first.
 
 Works in [Claude Code](https://claude.ai/code) (`/generate-problem`) and Cursor (orchestrator + the same files). Shared rules live in **one** file: [`.claude/shared.md`](.claude/shared.md).
