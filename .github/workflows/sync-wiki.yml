@@ -1,0 +1,42 @@
+name: Sync Wiki
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'wiki/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-wiki:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main repository
+        uses: actions/checkout@v4
+
+      - name: Checkout wiki repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}.wiki
+          path: wiki-repo
+          token: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+        id: checkout-wiki
+
+      - name: Sync wiki files
+        if: steps.checkout-wiki.outcome == 'success'
+        run: |
+          cd wiki-repo
+          find . -maxdepth 1 ! -name ".git" ! -name "." -exec rm -rf {} +
+          cp -r ../wiki/. .
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain)" ]; then
+            git add -A
+            git commit -m "docs: auto-sync wiki from main [skip ci]"
+            git push
+          fi
