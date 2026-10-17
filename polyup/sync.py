@@ -1,6 +1,7 @@
 """Orchestrates syncing a local problem folder to Polygon."""
 
 import json
+import time
 from pathlib import Path
 
 from .api import PolygonAPI
@@ -54,14 +55,18 @@ def sync_problem(
     _sync_info(api, pid, config, is_interactive)
     _sync_statement(api, pid, problem_dir, config, is_interactive)
     _sync_tutorial(api, pid, problem_dir)
-    _sync_validator(api, pid, problem_dir, config)
-    _sync_checker(api, pid, problem_dir, config)
-    _sync_interactor(api, pid, problem_dir, config)
+    _check_render(api, pid)
+    sources = {
+        _sync_validator(api, pid, problem_dir, config),
+        _sync_checker(api, pid, problem_dir, config),
+        _sync_interactor(api, pid, problem_dir, config),
+    }
     _sync_solutions(api, pid, problem_dir, config)
     _sync_validator_tests(api, pid, problem_dir)
     _sync_checker_tests(api, pid, problem_dir)
-    _sync_generators(api, pid, problem_dir, config)
+    sources.update(_sync_generators(api, pid, problem_dir, config))
     _sync_tests(api, pid, problem_dir)
+    _prune_sources(api, pid, sources)
     _sync_tags(api, pid, problem_dir)
     _sync_note(api, pid, problem_dir)
     _commit_and_build(api, pid, config)
@@ -101,6 +106,7 @@ def _sync_info(api: PolygonAPI, pid: dict, config: SyncConfig, interactive: bool
         timeLimit=str(_time_limit_ms(config.time_limit_ms)),
         memoryLimit=str(config.memory_limit_mb),
         interactive=str(interactive).lower(),
+        skipDuplicatedTestsValidation="false",
         inputFile=config.input_file,
         outputFile=config.output_file,
     )
@@ -136,6 +142,25 @@ def _sync_tutorial(api: PolygonAPI, pid: dict, problem_dir: Path):
     api.call("problem.saveGeneralTutorial", **pid, tutorial=parse_tutorial(tut_path))
 
 
+def _check_render(api: PolygonAPI, pid: dict):
+    print("Rendering statement and tutorial...")
+    data = api.call("problem.renderStatements", **pid, fatal=False) or {}
+    for kind in ("statements", "tutorials"):
+        for item in data.get(kind) or []:
+            for fmt in ("html", "pdf"):
+                result = item.get(fmt) or {}
+                if result.get("status") == "FAILED":
+                    print(f"  ⚠ {kind} {item.get('language')} {fmt}: {result.get('message')}")
+
+
+def _delete_stale(
+    api: PolygonAPI, pid: dict, kind: str, method: str, key: str, values: list, **extra,
+):
+    for value in values:
+        print(f"Deleting stale {kind} {value}...")
+        api.call(method, **pid, **{key: str(value)}, fatal=False, **extra)
+
+
 def _upload_source(
     api: PolygonAPI, pid: dict, path: Path, config: SyncConfig, name: str | None = None,
 ):
@@ -149,36 +174,45 @@ def _upload_source(
     )
 
 
-def _sync_validator(api: PolygonAPI, pid: dict, problem_dir: Path, config: SyncConfig):
+def _sync_validator(
+    api: PolygonAPI, pid: dict, problem_dir: Path, config: SyncConfig,
+) -> str | None:
     val_path = problem_dir / "validator.cpp"
     if not val_path.exists():
-        return
+        return None
     print("Uploading validator...")
     _upload_source(api, pid, val_path, config)
     api.call("problem.setValidator", **pid, validator="validator.cpp")
+    return val_path.name
 
 
-def _sync_checker(api: PolygonAPI, pid: dict, problem_dir: Path, config: SyncConfig):
+def _sync_checker(
+    api: PolygonAPI, pid: dict, problem_dir: Path, config: SyncConfig,
+) -> str | None:
     checker_path = problem_dir / "checker.cpp"
     if not checker_path.exists():
-        return
+        return None
     std_checker = detect_standard_checker(checker_path)
     if std_checker:
         print(f"Setting standard checker: {std_checker}")
         api.call("problem.setChecker", **pid, checker=f"std::{std_checker}.cpp")
-    else:
-        print("Uploading custom checker...")
-        _upload_source(api, pid, checker_path, config)
-        api.call("problem.setChecker", **pid, checker="checker.cpp")
+        return None
+    print("Uploading custom checker...")
+    _upload_source(api, pid, checker_path, config)
+    api.call("problem.setChecker", **pid, checker="checker.cpp")
+    return checker_path.name
 
 
-def _sync_interactor(api: PolygonAPI, pid: dict, problem_dir: Path, config: SyncConfig):
+def _sync_interactor(
+    api: PolygonAPI, pid: dict, problem_dir: Path, config: SyncConfig,
+) -> str | None:
     path = problem_dir / "interactor.cpp"
     if not path.exists():
-        return
+        return None
     print("Uploading interactor...")
     _upload_source(api, pid, path, config)
     api.call("problem.setInteractor", **pid, interactor="interactor.cpp")
+    return path.name
 
 
 def _sync_solutions(api: PolygonAPI, pid: dict, problem_dir: Path, config: SyncConfig):
@@ -189,9 +223,11 @@ def _sync_solutions(api: PolygonAPI, pid: dict, problem_dir: Path, config: SyncC
     tags_file = problem_dir / "solution_tags.json"
     if tags_file.exists():
         tags.update(json.loads(tags_file.read_text()))
+    local = set()
     for sol_file in sorted(sol_dir.iterdir()):
         if sol_file.suffix not in config.source_types:
             continue
+        local.add(sol_file.name)
         tag = tags.get(sol_file.stem, "OK")
         src_type = config.source_types[sol_file.suffix]
         print(f"Uploading solution {sol_file.name} (tag={tag})...")
@@ -202,6 +238,11 @@ def _sync_solutions(api: PolygonAPI, pid: dict, problem_dir: Path, config: SyncC
             tag=tag,
             _files={"file": (sol_file.name, sol_file.read_bytes())},
         )
+    remote = api.call("problem.solutions", **pid, fatal=False) or []
+    _delete_stale(
+        api, pid, "solution", "problem.deleteSolution", "name",
+        sorted({s["name"] for s in remote} - local),
+    )
 
 
 def _sync_validator_tests(api: PolygonAPI, pid: dict, problem_dir: Path):
@@ -209,7 +250,6 @@ def _sync_validator_tests(api: PolygonAPI, pid: dict, problem_dir: Path):
     if not vtests_dir.exists():
         return
     files = sorted(vtests_dir.iterdir())
-    new_count = len(files)
     for i, vt_file in enumerate(files, 1):
         verdict = "VALID" if vt_file.name.startswith("valid") else "INVALID"
         content = _crlf(vt_file.read_text())
@@ -219,10 +259,11 @@ def _sync_validator_tests(api: PolygonAPI, pid: dict, problem_dir: Path):
             testset="tests", testIndex=str(i),
             testInput=content, testVerdict=verdict,
         )
-    for j in range(new_count + 1, new_count + 20):
-        if api.call("problem.deleteValidatorTest", **pid,
-                     testset="tests", testIndex=str(j), fatal=False) is None:
-            break
+    remote = api.call("problem.validatorTests", **pid, fatal=False) or []
+    _delete_stale(
+        api, pid, "validator test", "problem.deleteValidatorTest", "testIndex",
+        [t["index"] for t in remote if t["index"] > len(files)],
+    )
 
 
 _CHECKER_VERDICTS = {
@@ -241,7 +282,8 @@ def _sync_checker_tests(api: PolygonAPI, pid: dict, problem_dir: Path):
     if not ctests_dir.exists():
         return
     stems = sorted({p.stem for p in ctests_dir.glob("*.in")})
-    for i, stem in enumerate(stems, 1):
+    count = 0
+    for stem in stems:
         inp = ctests_dir / f"{stem}.in"
         out = ctests_dir / f"{stem}.out"
         ans = ctests_dir / f"{stem}.ans"
@@ -253,32 +295,49 @@ def _sync_checker_tests(api: PolygonAPI, pid: dict, problem_dir: Path):
         if not verdict:
             print(f"  skip checker test {stem}: name must start with ok_/wa_/pe_/crashed_")
             continue
-        print(f"Uploading checker test {i} ({verdict}): {stem}")
+        count += 1
+        print(f"Uploading checker test {count} ({verdict}): {stem}")
         api.call(
             "problem.saveCheckerTest", **pid,
-            testIndex=str(i),
+            testIndex=str(count),
             testVerdict=verdict,
             testInput=_crlf(inp.read_text()),
             testOutput=_crlf(out.read_text()),
             testAnswer=_crlf(ans.read_text()),
         )
+    remote = api.call("problem.checkerTests", **pid, fatal=False) or []
+    _delete_stale(
+        api, pid, "checker test", "problem.deleteCheckerTest", "testIndex",
+        [t["index"] for t in remote if t["index"] > count],
+    )
 
 
 def _crlf(text: str) -> str:
     return text.replace("\r\n", "\n").replace("\n", "\r\n")
 
 
-def _sync_generators(api: PolygonAPI, pid: dict, problem_dir: Path, config: SyncConfig):
-    gen_dir = problem_dir / "generators"
-    if not gen_dir.exists():
-        return
-    for gen_file in sorted(gen_dir.glob("*.cpp")):
+def _sync_generators(
+    api: PolygonAPI, pid: dict, problem_dir: Path, config: SyncConfig,
+) -> list[str]:
+    gen_files = sorted((problem_dir / "generators").glob("*.cpp"))
+    for gen_file in gen_files:
         print(f"Uploading generator {gen_file.name}...")
         _upload_source(api, pid, gen_file, config)
+    return [f.name for f in gen_files]
+
+
+def _prune_sources(api: PolygonAPI, pid: dict, keep: set):
+    """Runs after the script is re-saved: Polygon refuses to delete a generator the script uses."""
+    files = api.call("problem.files", **pid, fatal=False) or {}
+    remote = {f["name"] for f in files.get("sourceFiles") or []}
+    _delete_stale(
+        api, pid, "source file", "problem.deleteFile", "name",
+        sorted(remote - keep), type="source",
+    )
 
 
 def _sync_tests(api: PolygonAPI, pid: dict, problem_dir: Path):
-    """Clear script → upload manual samples → re-upload script."""
+    """Clear script → upload manual samples → drop stale manual tests → re-upload script."""
     samples_dir = problem_dir / "samples"
     gen_dir = problem_dir / "generators"
 
@@ -286,7 +345,8 @@ def _sync_tests(api: PolygonAPI, pid: dict, problem_dir: Path):
     api.call("problem.clearScript", **pid, testset="tests", fatal=False)
 
     if samples_dir.exists():
-        for i, inp_file in enumerate(sorted(samples_dir.glob("*.in")), 1):
+        samples = sorted(samples_dir.glob("*.in"))
+        for i, inp_file in enumerate(samples, 1):
             out_file = inp_file.with_suffix(".out")
             test_input = inp_file.read_text()
             test_output = out_file.read_text() if out_file.exists() else ""
@@ -302,6 +362,14 @@ def _sync_tests(api: PolygonAPI, pid: dict, problem_dir: Path):
                 testOutputForStatements=test_output,
                 verifyInputOutputForStatements="true",
             )
+        remote = api.call(
+            "problem.tests", **pid, testset="tests", noInputs="true", fatal=False,
+        ) or []
+        _delete_stale(
+            api, pid, "manual test", "problem.deleteTest", "testIndex",
+            [t["index"] for t in remote if t.get("manual") and t["index"] > len(samples)],
+            testset="tests",
+        )
 
     gen_main = gen_dir / "generator.cpp" if gen_dir.exists() else None
     if gen_main and gen_main.exists():
@@ -367,6 +435,73 @@ def grant_access(api: PolygonAPI, problem_id: str, access: dict[str, str]):
 
 def list_accesses(api: PolygonAPI, problem_id: str):
     _print_accesses(api, {"problemId": str(problem_id)})
+
+
+_STRESS_DESCRIPTION = "polyup: generator + stress.conf"
+# Must agree with the main solution on small tests. WA is left out: its first
+# countertest would end the run before the other solutions are checked.
+_STRESS_TAGS = {"OK", "TL", "TO", "TM", "ML"}
+
+
+def run_stress(api: PolygonAPI, problem_id: str, problem_dir: Path, wait_s: int) -> int:
+    conf = problem_dir / "stress.conf"
+    if not conf.exists():
+        print(f"No stress.conf in {problem_dir}")
+        return 1
+    pid = {"problemId": str(problem_id)}
+    solutions = api.call("problem.solutions", **pid) or []
+    names = [s["name"] for s in solutions if s.get("tag") in _STRESS_TAGS]
+    if not names:
+        print("No OK/TL solutions on Polygon to compare with the main one.")
+        return 1
+
+    stresses = api.call("problem.stresses", **pid) or []
+    index = next(
+        (s["index"] for s in stresses if s.get("description") == _STRESS_DESCRIPTION), None,
+    )
+    pattern = f"generator {' '.join(conf.read_text().split())} [1..1000000000]"
+    print(f"Stress: {pattern}")
+    print(f"  vs main: {', '.join(names)}")
+    stress = api.call(
+        "problem.saveStress", **pid,
+        stressIndex=str(index) if index else None,
+        scriptPattern=pattern,
+        solutionNames=",".join(names),
+        description=_STRESS_DESCRIPTION,
+    )
+    index = stress["index"]
+    api.call("problem.runStresses", **pid, stressIndices=str(index))
+
+    deadline = time.monotonic() + wait_s
+    while True:
+        run = api.call("problem.stresses", **pid, stressIndex=str(index))[0].get("run")
+        if not run:
+            print("Stress run was cancelled.")
+            return 1
+        if run["status"] == "FINISHED":
+            return _report_stress(run)
+        if time.monotonic() > deadline:
+            print(f"Still {run['status']} after {wait_s}s. Check the Stresses page on Polygon.")
+            return 1
+        time.sleep(5)
+
+
+def _report_stress(run: dict) -> int:
+    print(
+        f"Stress {run.get('verdict')}: {run.get('judgedTestCount', 0)} tests, "
+        f"max {run.get('maxConsumedTime', 0)} ms"
+    )
+    if run.get("comment"):
+        print(f"  {run['comment']}")
+    counter = run.get("countertest")
+    if not counter:
+        return 0 if run.get("verdict") == "OK" else 1
+    print(f"  Countertest: {counter.get('scriptLine')}")
+    print("  Input: " + " ".join((counter.get("input") or "").splitlines()[:3]))
+    for report in counter.get("reports") or []:
+        line = f"    {report.get('solutionName')}: {report.get('verdict')} {report.get('comment') or ''}"
+        print(line.rstrip())
+    return 1
 
 
 def _print_cautions(api: PolygonAPI, pid: dict):

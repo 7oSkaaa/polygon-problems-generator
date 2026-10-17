@@ -9,7 +9,7 @@ from pathlib import Path
 from .access import collect_access
 from .api import PolygonAPI
 from .config import SyncConfig
-from .sync import grant_access, list_accesses, sync_problem
+from .sync import grant_access, list_accesses, run_stress, sync_problem
 
 
 def _load_env(env_file: Path):
@@ -86,6 +86,22 @@ def _access_cmd(argv: list[str]) -> int:
     return 0
 
 
+def _stress_cmd(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(
+        prog="python -m polyup stress",
+        description="Run a Polygon stress: generator + stress.conf, OK/TL solutions vs main",
+    )
+    parser.add_argument("problem", help="Problem folder name under problems/")
+    parser.add_argument("--wait", type=int, default=600, help="Seconds to wait for the run (default: 600)")
+    parser.add_argument("--api-delay", type=float, default=0.3)
+    args = parser.parse_args(argv)
+
+    repo_root = Path(__file__).resolve().parent.parent
+    problem_dir = _problem_dir(repo_root, args.problem)
+    api = _api(repo_root, args.api_delay)
+    return run_stress(api, _problem_id(problem_dir), problem_dir, args.wait)
+
+
 def main():
     if len(sys.argv) >= 2 and sys.argv[1] == "originality":
         from .originality import main as originality_main
@@ -93,10 +109,12 @@ def main():
         raise SystemExit(originality_main(sys.argv[2:]))
     if len(sys.argv) >= 2 and sys.argv[1] == "access":
         raise SystemExit(_access_cmd(sys.argv[2:]))
+    if len(sys.argv) >= 2 and sys.argv[1] == "stress":
+        raise SystemExit(_stress_cmd(sys.argv[2:]))
 
     parser = argparse.ArgumentParser(
         description="Sync a problem folder to Polygon",
-        epilog="Subcommands: python -m polyup originality <problem> | python -m polyup access <problem> [--list] [--access USER:LEVEL ...]",
+        epilog="Subcommands: python -m polyup originality <problem> | python -m polyup access <problem> [--list] [--access USER:LEVEL ...] | python -m polyup stress <problem> [--wait SECONDS]",
     )
     parser.add_argument("problem", help="Problem folder name (under problems/)")
     parser.add_argument("--dry-run", action="store_true")

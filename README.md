@@ -192,9 +192,14 @@ python -m polyup water_bottles --no-build
 python -m polyup water_bottles --access user1:WRITE user2:READ
 python -m polyup access water_bottles --list
 python -m polyup access water_bottles --access alice:WRITE
+python -m polyup stress water_bottles
 ```
 
 Uploads metadata, statement, tutorial, validator, checker, interactor, solutions (`acc` = MA, `acc_java` / `acc_alt` = OK, `brute` = TL or WA if interactive, `wa` = WA), generator + FreeMarker script, validator tests, checker tests (if present), tags; then commits, builds the package (`verify=true` unless `--no-verify`), grants access, and prints HARD cautions.
+
+The upload also renders the statement and tutorial on Polygon and prints any HTML or PDF render error. It keeps Polygon's duplicate-test check on. On a re-upload it deletes what is gone locally: solutions, source files (old generators, a custom checker replaced by a standard one), manual tests, validator tests and checker tests. A list is only cleaned when its local folder exists. Polygon keeps old revisions, so a deleted file can still be found there.
+
+`python -m polyup stress <name>` runs a stress on Polygon. The pattern is `generator <stress.conf> [1..1000000000]` and it compares every OK/TL solution with the main one. It prints the countertest if one is found and exits with code 1. The stress is saved in your working copy and is committed with the next upload. Use `--wait` to change the 600 second polling limit.
 
 | Option | Default | Description |
 |---|---|---|
