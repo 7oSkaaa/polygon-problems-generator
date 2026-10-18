@@ -23,6 +23,7 @@ What it does:
 5. Validate samples + a handful of generator outputs
 6. Run `acc.cpp`; compare samples; Java and `acc_alt.cpp` vs checker
 7. Confirm `wa.cpp` is rejected on at least one test
+   (interactive: steps 6 and 7 run each solution against the interactor with `scripts/run-interactive.py`, then the checker on `tout`)
 8. Stress `acc` vs `brute` on small random tests (non-interactive)
 
 After a green run:
@@ -33,7 +34,11 @@ python -m polyup <name>
 
 Polygon still builds the package (`verify=true` unless `--no-verify`) and runs full invocations.
 
-Interactive problems skip checker-vs-WA and ACC-vs-brute (the interactor issues WA on query limit; tag `brute.cpp` as Wrong Answer).
+Interactive problems skip the checker sanity check and ACC-vs-brute (the interactor issues WA on query limit; tag `brute.cpp` as Wrong Answer). To try one solution by hand:
+
+```bash
+python3 scripts/run-interactive.py build/interactor test.in --checker build/checker -- build/acc
+```
 
 ## Compared to Polyman
 

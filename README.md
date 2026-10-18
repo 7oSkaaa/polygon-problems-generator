@@ -98,7 +98,7 @@ problems/<name>/
 ├── validator.cpp
 ├── checker.cpp
 ├── interactor.cpp             ← interactive only
-├── samples/                   ← used in statements
+├── samples/                   ← used in statements (01.judge = judge lines if interactive)
 ├── manual_tests/              ← 1–2 hand-written edge cases (*.in)
 ├── validator_tests/
 ├── checker_tests/             ← ok_* / wa_* / pe_* (.in + .out + .ans)
@@ -231,6 +231,8 @@ Example `access.json`:
 `problem.setAccess` takes effect immediately (no commit). It cannot assign `OWNER` or `@group` logins. You need **direct** WRITE or OWNER on the problem.
 
 Checker tests live in `checker_tests/` as `ok_sample.in` + `.out` + `.ans` (prefixes: `ok_`, `wa_`, `pe_`, `crashed_`). Add them even for a standard checker. Polygon rejects a test whose `.out` is empty.
+
+For an interactive sample, `samples/01.in` is the hidden test data. Put the judge's lines in `samples/01.judge` and the participant's lines in `samples/01.out`; polyup shows them as the statement example's input and output.
 
 ## Agents (no duplication)
 

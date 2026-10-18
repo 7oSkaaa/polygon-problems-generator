@@ -58,62 +58,44 @@ Use `_fail` when the test data itself is wrong or the interactor has a bug — i
 
 ## Reading participant output safely
 
-Always use `ouf.read*()` with bounds so malformed output gives WA, not a crash:
+Bounded reads such as `ouf.readInt(1, n, "query value")` quit with PE as soon as the value is bad, before the interactor can send `-1`. The solution then waits for a reply that never comes and may get any verdict.
+
+- A value that gets a reply (a query): read it with `ouf.readToken()` and check it with `parse_value` from `templates/interactor.cpp`. On bad input, send `-1`, then quit.
+- The final answer after `!`: no reply follows, so it does not need `-1`. Parsing it with `parse_value` too keeps the code uniform.
+- Test data from `inf`: bounded reads are fine, the participant is not involved.
 
 ```cpp
-int q = ouf.readInt(1, MAX_QUERIES, "query type");   // enforces range
-string token = ouf.readToken();                       // reads next whitespace-delimited token
-long long x = ouf.readLong(1LL, n, "query value");
+long long value;
+if (!parse_value(ouf.readToken(), 1, n, value))
+    reject(_pe, format("query %d: expected an integer from 1 to %d", queries, n));
 ```
 
-If `ouf.read*()` fails (out of range, wrong type), testlib automatically gives WA/PE — you don't need to handle it manually.
+`reject` sends `-1`, flushes, and calls `quit`. Both helpers are in `templates/interactor.cpp`.
 
 ## Typical interactor structure
 
+Start from `templates/interactor.cpp` and fill in the two `TODO`s. For a guessing game with a hidden `secret` read from `inf`, the loop looks like this:
+
 ```cpp
-#include "testlib.h"
-using namespace std;
+while (true) {
+    string type = ouf.readToken();
 
-int main(int argc, char* argv[]) {
-    registerInteraction(argc, argv);
-
-    // 1. Read test data
-    int n = inf.readInt();
-    int secret = inf.readInt();
-
-    int maxQueries = 30;
-    int queries = 0;
-
-    // 2. Interaction loop
-    while (true) {
-        // Read participant's next action
-        string type = ouf.readToken();
-
-        if (type == "!") {
-            // Final answer
-            int answer = ouf.readInt(1, n, "final answer");
-            if (answer == secret)
-                quitf(_ok, "correct answer in %d queries", queries);
-            else
-                quitf(_wa, "wrong answer: expected %d, got %d", secret, answer);
-        } else if (type == "?") {
-            // Query
-            if (queries >= maxQueries)
-                quitf(_wa, "too many queries: used %d, limit %d", queries + 1, maxQueries);
-            queries++;
-
-            int x = ouf.readInt(1, n, "query value");
-            if (x < secret)
-                cout << ">" << "\n";
-            else if (x > secret)
-                cout << "<" << "\n";
-            else
-                cout << "=" << "\n";
-            cout.flush();
-        } else {
-            quitf(_pe, "expected '?' or '!', got '%s'", type.c_str());
-        }
+    if (type == "!") {
+        if (!parse_value(ouf.readToken(), 1, n, value))
+            quitf(_pe, "the answer must be an integer from 1 to %d", n);
+        if (value != secret)
+            quitf(_wa, "expected %d, got %lld", secret, value);
+        quitf(_ok, "correct in %d queries", queries);
     }
+    if (type != "?")
+        reject(_pe, format("expected '?' or '!', got '%s'", type.c_str()));
+    if (queries == maxQueries)
+        reject(_wa, format("more than %d queries", maxQueries));
+    queries++;
+
+    if (!parse_value(ouf.readToken(), 1, n, value))
+        reject(_pe, format("query %d: expected an integer from 1 to %d", queries, n));
+    cout << (value < secret ? ">" : value > secret ? "<" : "=") << endl;
 }
 ```
 
@@ -123,8 +105,8 @@ Two valid approaches:
 
 **Approach A — interactor enforces it:**
 ```cpp
-if (queries >= maxQueries)
-    quitf(_wa, "query limit exceeded");
+if (queries == maxQueries)
+    reject(_wa, format("more than %d queries", maxQueries));
 ```
 
 **Approach B — read limit from test data:**
@@ -213,14 +195,14 @@ Example statement note:
 | Mistake | Symptom | Fix |
 |---------|---------|-----|
 | Not flushing after each response | Solution hangs / ILE (Idleness Limit Exceeded) | Add `cout.flush()` or use `endl` |
-| Reading participant output from `cin` | Wrong values / UB | Use `ouf.readInt()` / `ouf.readToken()` |
+| Reading participant output from `cin` | Wrong values / UB | Use `ouf.readToken()` (with `parse_value` for numbers) |
 | **Multi-test: not sending `t` to solution** | **CRASHED / exit -1 in Polygon** | **After `int t = inf.readInt();` add `cout << t << "\n"; cout.flush();`** |
 | Not calling `setTestCase(tc+1)` per test | testlib warning | Add as first line inside each test-case loop iteration |
 | Not sending `-1` before `quitf` on error | Solution reads garbage / hangs | Before every `quitf(_wa/_pe)` on bad query: `cout << -1 << "\n"; cout.flush();` |
 | Using `quitf(_ok, ...)` before reading the final answer | Wrong verdict | Always read and validate the answer first |
 | Forgetting to handle EOF (participant exits early) | Crash | `ouf.readToken()` will produce PE automatically |
 | Using `_fail` for participant mistakes | Misleading verdict | Use `_wa` or `_pe` for participant errors; `_fail` is for judge bugs |
-| Interactor crashes on bad input | Crash / no verdict | Use `ouf.read*()` with range — it handles bad input gracefully |
+| Bounded `ouf.readInt(lo, hi)` on a query value | Bad query quits before `-1` is sent; solution hangs | `parse_value(ouf.readToken(), lo, hi, value)`, then `reject(...)` on failure |
 | `registerInteraction(argc, argv, inf)` — wrong signature | Compile error | Use `registerInteraction(argc, argv)` (no third argument) |
 
 ## Error signaling convention (-1)

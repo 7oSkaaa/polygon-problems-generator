@@ -45,7 +45,7 @@ problems/<name>/
 │   └── wa.cpp
 ├── generators/
 │   └── generator.cpp
-├── samples/            ← 01.in + 01.out, used in statements
+├── samples/            ← 01.in + 01.out (+ 01.judge if interactive), used in statements
 ├── manual_tests/       ← 1–2 hand-written edge cases (*.in)
 ├── validator_tests/    ← valid_* / invalid_*
 ├── checker_tests/      ← ok_* / wa_* / pe_* (.in + .out + .ans)

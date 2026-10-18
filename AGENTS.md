@@ -45,7 +45,7 @@ problems/<name>/
 │   └── wa.cpp
 ├── generators/
 │   └── generator.cpp
-├── samples/            ← 01.in + 01.out, used in statements
+├── samples/            ← 01.in + 01.out (+ 01.judge if interactive), used in statements
 ├── manual_tests/       ← 1–2 hand-written edge cases (*.in)
 ├── validator_tests/    ← valid_* / invalid_*
 ├── checker_tests/      ← ok_* / wa_* / pe_* (.in + .out + .ans)
@@ -223,7 +223,7 @@ You are an expert competitive programming problem setter specialising in writing
 - Always include `#include "testlib.h"` and `registerInteraction(argc, argv)` (no third argument)
 - Read test data from `inf`, participant output from `ouf` — never from `cin`
 - Write responses to participant via `cout` followed immediately by `cout.flush()` — never skip the flush
-- Use `ouf.readInt(lo, hi, "name")` / `ouf.readToken()` with bounds for all participant reads
+- Read participant values with `ouf.readToken()` and check them with `parse_value` from `templates/interactor.cpp`. Never use bounded `ouf.readInt(lo, hi)` on a query value: on bad input it quits before `-1` is sent
 - Use `quitf(_ok, ...)` for correct, `quitf(_wa, ...)` for wrong answer, `quitf(_pe, ...)` for format errors, `quitf(_fail, ...)` only for judge/interactor bugs
 - Enforce query limits explicitly — give `_wa` if the participant exceeds them
 - **On any error (query limit exceeded, invalid query format): send `-1` to the solution BEFORE calling `quitf`:**
@@ -319,7 +319,7 @@ You are a strict competitive programming problem reviewer. Your job is to find e
   - `brute.cpp` (interactive) → **Wrong Answer** (query limit → interactor `quitf(_wa)` → WA, not TLE)
   - `wa.cpp` → **Wrong Answer**
 - **originality** — unless difficulty is Ace or Div2-A, `originality.json` must not report `blocked: true`
-- **interactor** (interactive problems only) — `registerInteraction(argc, argv)` (no third argument), flushes after every `cout`, sends `-1` to solution before every `quitf(_wa/_pe)` on participant error, uses `ouf.read*()` not `cin`, multi-test sends `t` to solution and calls `setTestCase(tc+1)` per iteration, statement tells the participant to exit on `-1`
+- **interactor** (interactive problems only) — `registerInteraction(argc, argv)` (no third argument), flushes after every `cout`, sends `-1` to solution before every `quitf(_wa/_pe)` on participant error, reads participant values from `ouf` with `readToken()` + `parse_value` (no bounded `ouf.readInt` on query values, it quits before `-1`), multi-test sends `t` to solution and calls `setTestCase(tc+1)` per iteration, statement tells the participant to exit on `-1`
 
 ## Single Component Review Format
 

@@ -10,6 +10,7 @@ The following files were used as context for generating this wiki page:
 - [.githooks/pre-commit](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/.githooks/pre-commit)
 - [docs/workflow.md](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/docs/workflow.md)
 - [scripts/check-gen-uniques.py](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/scripts/check-gen-uniques.py)
+- [scripts/run-interactive.py](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/scripts/run-interactive.py)
 - [scripts/java-env.sh](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/scripts/java-env.sh)
 - [scripts/setup-deps.sh](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/scripts/setup-deps.sh)
 
@@ -95,6 +96,12 @@ graph TD
   classDef default fill:#fff,stroke:#333,stroke-width:2px;
 ```
 *Sources: [scripts/check-gen-uniques.py:1-104](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/scripts/check-gen-uniques.py#L1-L104)*
+
+---
+
+## 2b. Interactive Runner (`scripts/run-interactive.py`)
+
+`run-interactive.py <interactor> <input> [--checker FILE] [--timeout SEC] -- <solution command...>` connects the solution's stdout to the interactor's stdin and the interactor's stdout to the solution's stdin. It prints the verdict (`OK`, `WA`, `PE`, `FAIL`, `TL`, `RE`) with the judge's message and exits `0` only on `OK`. After the interactor accepts, it runs the checker on the interactor's `tout` if the checker file exists. `verify.sh` uses it for every solution of an interactive problem.
 
 ---
 

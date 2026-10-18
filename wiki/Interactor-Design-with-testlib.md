@@ -72,12 +72,12 @@ Sources: `tutorials/interactor.md:37-47` [tutorials/interactor.md:37-47](https:/
 
 ## 3. Reading Participant Output Safely and Verdicts
 
-To prevent crashes or undefined behavior when processing malformed participant data, the interactor should utilize testlib's typed read functions on `ouf` [[tutorials/interactor.md:59-70](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/tutorials/interactor.md#L59-L70)] [.cursor/rules/07-interactor.mdc:18](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/.cursor/rules/07-interactor.mdc#L18). If bounds checks fail, testlib automatically assigns a `_wa` or `_pe` verdict [tutorials/interactor.md:69](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/tutorials/interactor.md#L69).
+A bounded read such as `ouf.readInt(1, n)` quits with PE on bad input before the interactor can send `-1`, so the solution may hang. The interactor reads each value with `ouf.readToken()`, checks it with `parse_value`, and on failure calls `reject`, which sends `-1` and then quits. Both helpers live in [`templates/interactor.cpp`](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/templates/interactor.cpp) [[tutorials/interactor.md:59-74](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/tutorials/interactor.md#L59-L74)].
 
 ```cpp
-int q = ouf.readInt(1, MAX_QUERIES, "query type");
-string token = ouf.readToken();
-long long x = ouf.readLong(1LL, n, "query value");
+long long value;
+if (!parse_value(ouf.readToken(), 1, n, value))
+    reject(_pe, format("query %d: expected an integer from 1 to %d", queries, n));
 ```
 
 ### Verdict Functions

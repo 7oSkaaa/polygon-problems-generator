@@ -90,6 +90,14 @@ else
     run_timed() { shift; "$@"; }
 fi
 
+# Interactive only: run a solution against the interactor (and checker); exit 0 means OK.
+interact() {
+    local input="$1"
+    shift
+    python3 "$REPO_ROOT/scripts/run-interactive.py" "$BUILD/interactor" "$input" \
+        --checker "$BUILD/checker" -- "$@"
+}
+
 cleanup() {
     if [[ "$KEEP" == true ]]; then
         echo -e "  ${YELLOW}→${NC} keeping $BUILD and $TESTS (--keep)"
@@ -426,6 +434,13 @@ if [[ -x "$BUILD/acc" ]]; then
     for input in "$TESTS"/test_*.in; do
         [[ -f "$input" ]] || continue
         base=$(basename "$input" .in)
+        if [[ "$INTERACTIVE" == true ]]; then
+            if ! verdict=$(interact "$input" "$BUILD/acc"); then
+                acc_fail=$((acc_fail + 1))
+                [[ $acc_fail -le 3 ]] && warn "ACC got $verdict on $base"
+            fi
+            continue
+        fi
         if ! run_timed 5 "$BUILD/acc" < "$input" > "$TESTS/${base}.ans" 2>/dev/null; then
             acc_fail=$((acc_fail + 1))
         fi
@@ -477,18 +492,24 @@ fi
 
 cross_check() {
     local label="$1"
-    local runner="$2"
+    local secs="$2"
+    local cmd="$3"
     header "$label"
     local failc=0 total=0
     for input in "$TESTS"/test_*.in; do
         [[ -f "$input" ]] || continue
         base=$(basename "$input" .in)
+        if [[ "$INTERACTIVE" == true ]]; then
+            total=$((total + 1))
+            eval "interact \"\$input\" $cmd" >/dev/null || failc=$((failc + 1))
+            continue
+        fi
         ans="$TESTS/${base}.ans"
         [[ -f "$ans" ]] || continue
         total=$((total + 1))
         out="$TESTS/${base}.${label}.out"
-        if eval "$runner" < "$input" > "$out" 2>/dev/null; then
-            if [[ "$INTERACTIVE" != true ]] && [[ -x "$BUILD/checker" ]]; then
+        if eval "run_timed $secs $cmd" < "$input" > "$out" 2>/dev/null; then
+            if [[ -x "$BUILD/checker" ]]; then
                 if ! "$BUILD/checker" "$input" "$out" "$ans" >/dev/null 2>&1; then
                     failc=$((failc + 1))
                 fi
@@ -502,21 +523,25 @@ cross_check() {
     if [[ $total -eq 0 ]]; then
         warn "No tests"
     elif [[ $failc -eq 0 ]]; then
-        pass "Matches C++ ACC on $total tests"
+        if [[ "$INTERACTIVE" == true ]]; then
+            pass "Accepted on $total tests"
+        else
+            pass "Matches C++ ACC on $total tests"
+        fi
     else
         fail "$label differs on $failc/$total tests"
     fi
 }
 
 if [[ -f "$BUILD/acc_java.class" ]]; then
-    cross_check "Java ACC" "run_timed 10 \"$JAVA\" -cp \"$BUILD\" acc_java"
+    cross_check "Java ACC" 10 "\"$JAVA\" -cp \"$BUILD\" acc_java"
 else
     header "Java ACC"
     warn "Skipped (no acc_java.class)"
 fi
 
 if [[ -x "$BUILD/acc_alt" ]]; then
-    cross_check "alt ACC" "run_timed 5 \"$BUILD/acc_alt\""
+    cross_check "alt ACC" 5 "\"$BUILD/acc_alt\""
 else
     header "alt ACC"
     warn "Skipped (no acc_alt)"
@@ -526,8 +551,19 @@ fi
 
 header "WA solution rejection"
 
-if [[ "$INTERACTIVE" == true ]]; then
-    warn "Skipped for interactive (WA is issued by the interactor on bad queries)"
+if [[ "$INTERACTIVE" == true && -x "$BUILD/wa" ]]; then
+    wa_rejected=0
+    wa_total=0
+    for input in "$TESTS"/test_*.in; do
+        [[ -f "$input" ]] || continue
+        wa_total=$((wa_total + 1))
+        interact "$input" "$BUILD/wa" >/dev/null || wa_rejected=$((wa_rejected + 1))
+    done
+    if [[ $wa_rejected -gt 0 ]]; then
+        pass "Rejected on $wa_rejected/$wa_total tests"
+    else
+        fail "WA solution was never rejected — interactor or WA solution may be wrong"
+    fi
 elif [[ -x "$BUILD/wa" && -x "$BUILD/checker" ]]; then
     wa_rejected=0
     wa_total=0

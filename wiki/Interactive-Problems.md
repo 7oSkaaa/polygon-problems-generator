@@ -50,7 +50,7 @@ Interactive problems rely on `testlib.h` to manage the interactor process via `r
 Critical design patterns covered in the child page include:
 * **Immediate Flushing**: Ensuring every response written to `cout` is explicitly flushed (`cout.flush()`) to prevent participant **ILE (Idleness Limit Exceeded)** errors [tutorials/interactor.md:37-47()].
 * **Verdict Functions**: Issuing structured outcomes using `quitf(_ok, ...)`, `quitf(_wa, ...)`, `quitf(_pe, ...)`, and `quitf(_fail, ...)` for interactor/judge bugs [tutorials/interactor.md:48-58()].
-* **Safe Parsing**: Utilizing bounded read methods like `ouf.readInt()` and `ouf.readToken()` to guard against malformed data [tutorials/interactor.md:59-70()].
+* **Safe Parsing**: Reading participant values with `ouf.readToken()` and `parse_value`, then calling `reject` (send `-1`, then quit) on bad input, instead of bounded `ouf.readInt()` [tutorials/interactor.md:59-74](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/tutorials/interactor.md#L59-L74).
 * **Multi-test Management**: Forwarding the test count `t` and invoking `setTestCase(tc + 1)` for multi-test interactive sets [tutorials/interactor.md:137-158()].
 
 For a complete breakdown of stream mechanics, query-count enforcement, and logging via `tout`, see [Interactor Design with testlib](Interactor-Design-with-testlib).

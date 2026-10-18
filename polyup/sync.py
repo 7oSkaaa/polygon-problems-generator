@@ -350,8 +350,11 @@ def _sync_tests(api: PolygonAPI, pid: dict, problem_dir: Path):
         out_file = inp_file.with_suffix(".out")
         test_input = inp_file.read_text()
         test_output = out_file.read_text() if out_file.exists() else ""
+        # Interactive samples show the judge's lines as the statement input, not the hidden test data.
+        judge_file = inp_file.with_suffix(".judge")
+        shown_input = judge_file.read_text() if judge_file.exists() else test_input
         # ponytail: Polygon stores input as \r\n; match in inputForStatements
-        stmt_input = test_input.replace("\n", "\r\n")
+        stmt_input = shown_input.replace("\n", "\r\n")
         print(f"Uploading manual sample test {i}...")
         api.call(
             "problem.saveTest", **pid,
@@ -360,7 +363,7 @@ def _sync_tests(api: PolygonAPI, pid: dict, problem_dir: Path):
             testUseInStatements="true",
             testInputForStatements=stmt_input,
             testOutputForStatements=test_output,
-            verifyInputOutputForStatements="true",
+            verifyInputOutputForStatements=str(not judge_file.exists()).lower(),
         )
     manual = sorted(manual_dir.glob("*.in")) if manual_dir.exists() else []
     for i, inp_file in enumerate(manual, len(samples) + 1):

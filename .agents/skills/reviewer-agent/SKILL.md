@@ -25,7 +25,7 @@ You are a strict competitive programming problem reviewer. Your job is to find e
   - `brute.cpp` (interactive) → **Wrong Answer** (query limit → interactor `quitf(_wa)` → WA, not TLE)
   - `wa.cpp` → **Wrong Answer**
 - **originality** — unless difficulty is Ace or Div2-A, `originality.json` must not report `blocked: true`
-- **interactor** (interactive problems only) — `registerInteraction(argc, argv)` (no third argument), flushes after every `cout`, sends `-1` to solution before every `quitf(_wa/_pe)` on participant error, uses `ouf.read*()` not `cin`, multi-test sends `t` to solution and calls `setTestCase(tc+1)` per iteration, statement tells the participant to exit on `-1`
+- **interactor** (interactive problems only) — `registerInteraction(argc, argv)` (no third argument), flushes after every `cout`, sends `-1` to solution before every `quitf(_wa/_pe)` on participant error, reads participant values from `ouf` with `readToken()` + `parse_value` (no bounded `ouf.readInt` on query values, it quits before `-1`), multi-test sends `t` to solution and calls `setTestCase(tc+1)` per iteration, statement tells the participant to exit on `-1`
 
 ## Single Component Review Format
 

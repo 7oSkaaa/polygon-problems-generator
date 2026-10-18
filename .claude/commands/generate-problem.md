@@ -418,6 +418,8 @@ For each sample (typically 1 sample for simple problems, up to 2–4 for problem
 
 The sample input/output must exactly match what appears in the statement's `\Note` section. For multitest problems, the sample input includes the test count on the first line.
 
+Interactive problems: `01.in` is the hidden test data, `01.judge` holds the judge's lines, and `01.out` holds the participant's lines. The statement example shows `01.judge` as the input and `01.out` as the output, and both must match the interaction table in the Notes.
+
 Then write **1–2 hand-written edge cases** as `problems/<name>/manual_tests/01.in`, `02.in` (input only; Polygon computes the answer with the main solution). Pick cases a random generator rarely hits: exhaustive tiny inputs, ties, the trap of the WA solution. They are uploaded as manual tests, not used in statements, and must differ from the samples and every script test.
 
 ---

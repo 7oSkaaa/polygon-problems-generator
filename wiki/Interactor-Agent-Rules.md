@@ -35,7 +35,7 @@ An interactive problem relies on specific stream bindings provided by `testlib.h
 graph TD
     sub5["Test Input File"] -->|"inf"| node1["interactor.cpp"]
     node1 -->|"cout.flush()"| sub6["Participant stdin"]
-    sub7["Participant stdout"] -->|"ouf.readInt()"| node1
+    sub7["Participant stdout"] -->|"ouf.readToken() + parse_value"| node1
     node1 -->|"tout"| sub8["Checker ouf"]
     
     classDef default fill:none,stroke:black,stroke-width:2px;
@@ -53,7 +53,7 @@ The generated interactor must strictly adhere to `testlib.h` initialization and 
 ### Initialization and Mandatory Flushing
 * **Initialization:** Every interactor must include `#include "testlib.h"` and call `registerInteraction(argc, argv)` without a third argument [.agents/skills/interactor-agent/SKILL.md:16-16](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/.agents/skills/interactor-agent/SKILL.md#L16-L16).
 * **Flushing:** Every write to `cout` must be immediately followed by `cout.flush()`. Forgetting to flush causes the participant's process to hang, resulting in an **ILE (Idleness Limit Exceeded)** verdict rather than a Wrong Answer (`_wa`) [.agents/skills/interactor-agent/SKILL.md:18-18](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/.agents/skills/interactor-agent/SKILL.md#L18-L18), [.agents/skills/interactor-agent/SKILL.md:35-35](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/.agents/skills/interactor-agent/SKILL.md#L35-L35).
-* **Input Parsing:** Participant queries must be ingested exclusively via `ouf` using bounds validation (e.g., `ouf.readInt(lo, hi, "name")` or `ouf.readToken()`) [.agents/skills/interactor-agent/SKILL.md:17-17](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/.agents/skills/interactor-agent/SKILL.md#L17-L17), [.agents/skills/interactor-agent/SKILL.md:19-19](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/.agents/skills/interactor-agent/SKILL.md#L19-L19).
+* **Input Parsing:** Participant values are read only from `ouf`, with `ouf.readToken()` checked by `parse_value` from `templates/interactor.cpp`. Bounded `ouf.readInt(lo, hi)` is not used for queries, because it quits on bad input before `-1` is sent [.agents/skills/interactor-agent/SKILL.md:17-17](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/.agents/skills/interactor-agent/SKILL.md#L17-L17), [.agents/skills/interactor-agent/SKILL.md:19-19](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/.agents/skills/interactor-agent/SKILL.md#L19-L19).
 
 ### Error Protocol and Termination (`-1` Signal)
 When a participant exceeds query limits or sends invalid query formats, the interactor must emit the `-1` termination signal to `cout` before invoking `quitf` with `_wa` [.agents/skills/interactor-agent/SKILL.md:21-27](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/.agents/skills/interactor-agent/SKILL.md#L21-L27).
