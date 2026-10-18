@@ -114,21 +114,37 @@ fi
 header "Static checks"
 
 bad_pragma=0
+bad_debug=0
+bad_name=0
 for src in "$PROBLEM_DIR/solutions/"*.cpp "$PROBLEM_DIR/solutions/"*.java \
+           "$PROBLEM_DIR/generators/"*.cpp \
            "$PROBLEM_DIR/validator.cpp" "$PROBLEM_DIR/checker.cpp" \
            "$PROBLEM_DIR/interactor.cpp"; do
     [[ -f "$src" ]] || continue
+    base=$(basename "$src")
     if grep -E '#pragma[[:space:]]+GCC[[:space:]]+optimize|#pragma[[:space:]]+clang[[:space:]]+optimize' "$src" >/dev/null 2>&1; then
-        fail "compiler-optimization pragma in $(basename "$src")"
+        fail "compiler-optimization pragma in $base"
         bad_pragma=1
     fi
-    base=$(basename "$src")
-    if [[ "$base" =~ [^A-Za-z._] ]]; then
-        fail "illegal character in file name $base (letters, '.', '_' only)"
+    if grep -E 'freopen|ONLINE_JUDGE' "$src" >/dev/null 2>&1; then
+        fail "local debug code (freopen / ONLINE_JUDGE) in $base"
+        bad_debug=1
+    fi
+    if [[ "$base" =~ [^a-z0-9._] ]]; then
+        fail "illegal character in file name $base (lowercase letters, digits, '_' only)"
+        bad_name=1
     fi
 done
 [[ $bad_pragma -eq 0 ]] && pass "No optimization pragmas"
-pass "File names checked"
+[[ $bad_debug -eq 0 ]] && pass "No freopen / ONLINE_JUDGE debug code"
+[[ $bad_name -eq 0 ]] && pass "File names checked"
+
+title=$(grep -m1 -oE '\\textbf\{\\Large [^}]*\}' "$PROBLEM_DIR/statement/statement.tex" 2>/dev/null || true)
+if [[ "$title" == *[,\;]* ]]; then
+    fail "statement title has a comma or semicolon (breaks CSV): ${title//\\/\\\\}"
+elif [[ -n "$title" ]]; then
+    pass "Statement title is CSV-safe"
+fi
 
 # ── 1. Originality ───────────────────────────────────────────────────────────
 
@@ -200,10 +216,11 @@ GEN_SRC=$(find "$PROBLEM_DIR/generators" -name "generator.cpp" 2>/dev/null | hea
 if [[ -n "$GEN_SRC" ]]; then
     if $CXX $CXXFLAGS -o "$BUILD/gen" "$GEN_SRC"; then
         pass "Compiled"
-        if python3 "$REPO_ROOT/scripts/check-gen-uniques.py" "$GEN_SRC" "$BUILD/gen" "$PROBLEM_DIR/samples"; then
-            pass "Script tests unique (no equal inputs vs samples or each other)"
+        if python3 "$REPO_ROOT/scripts/check-gen-uniques.py" "$GEN_SRC" "$BUILD/gen" \
+                "$PROBLEM_DIR/samples" "$PROBLEM_DIR/manual_tests"; then
+            pass "Script tests unique and at most 30 tests in total"
         else
-            fail "Duplicate generator/sample inputs — Polygon will reject equal tests"
+            fail "Duplicate inputs or more than 30 tests — Polygon will reject equal tests"
         fi
     else
         fail "generator.cpp failed to compile"
@@ -342,6 +359,11 @@ if [[ -d "$PROBLEM_DIR/samples" ]]; then
         fi
     done
 fi
+
+for inp in "$PROBLEM_DIR/manual_tests/"*.in; do
+    [[ -f "$inp" ]] || continue
+    copy_input "$inp"
+done
 
 auto_stress_args() {
     local gen_src="$1"

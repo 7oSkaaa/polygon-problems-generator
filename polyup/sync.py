@@ -337,39 +337,49 @@ def _prune_sources(api: PolygonAPI, pid: dict, keep: set):
 
 
 def _sync_tests(api: PolygonAPI, pid: dict, problem_dir: Path):
-    """Clear script → upload manual samples → drop stale manual tests → re-upload script."""
+    """Clear script → upload samples + manual tests → drop stale manual tests → re-upload script."""
     samples_dir = problem_dir / "samples"
+    manual_dir = problem_dir / "manual_tests"
     gen_dir = problem_dir / "generators"
 
     print("Clearing test script...")
     api.call("problem.clearScript", **pid, testset="tests", fatal=False)
 
-    if samples_dir.exists():
-        samples = sorted(samples_dir.glob("*.in"))
-        for i, inp_file in enumerate(samples, 1):
-            out_file = inp_file.with_suffix(".out")
-            test_input = inp_file.read_text()
-            test_output = out_file.read_text() if out_file.exists() else ""
-            # ponytail: Polygon stores input as \r\n; match in inputForStatements
-            stmt_input = test_input.replace("\n", "\r\n")
-            print(f"Uploading manual sample test {i}...")
-            api.call(
-                "problem.saveTest", **pid,
-                testset="tests", testIndex=str(i),
-                testInput=test_input,
-                testUseInStatements="true",
-                testInputForStatements=stmt_input,
-                testOutputForStatements=test_output,
-                verifyInputOutputForStatements="true",
-            )
-        remote = api.call(
-            "problem.tests", **pid, testset="tests", noInputs="true", fatal=False,
-        ) or []
-        _delete_stale(
-            api, pid, "manual test", "problem.deleteTest", "testIndex",
-            [t["index"] for t in remote if t.get("manual") and t["index"] > len(samples)],
-            testset="tests",
+    samples = sorted(samples_dir.glob("*.in")) if samples_dir.exists() else []
+    for i, inp_file in enumerate(samples, 1):
+        out_file = inp_file.with_suffix(".out")
+        test_input = inp_file.read_text()
+        test_output = out_file.read_text() if out_file.exists() else ""
+        # ponytail: Polygon stores input as \r\n; match in inputForStatements
+        stmt_input = test_input.replace("\n", "\r\n")
+        print(f"Uploading manual sample test {i}...")
+        api.call(
+            "problem.saveTest", **pid,
+            testset="tests", testIndex=str(i),
+            testInput=test_input,
+            testUseInStatements="true",
+            testInputForStatements=stmt_input,
+            testOutputForStatements=test_output,
+            verifyInputOutputForStatements="true",
         )
+    manual = sorted(manual_dir.glob("*.in")) if manual_dir.exists() else []
+    for i, inp_file in enumerate(manual, len(samples) + 1):
+        print(f"Uploading manual test {i}: {inp_file.name}...")
+        api.call(
+            "problem.saveTest", **pid,
+            testset="tests", testIndex=str(i),
+            testInput=inp_file.read_text(),
+            testUseInStatements="false",
+        )
+    manual_count = len(samples) + len(manual)
+    remote = api.call(
+        "problem.tests", **pid, testset="tests", noInputs="true", fatal=False,
+    ) or []
+    _delete_stale(
+        api, pid, "manual test", "problem.deleteTest", "testIndex",
+        [t["index"] for t in remote if t.get("manual") and t["index"] > manual_count],
+        testset="tests",
+    )
 
     gen_main = gen_dir / "generator.cpp" if gen_dir.exists() else None
     if gen_main and gen_main.exists():

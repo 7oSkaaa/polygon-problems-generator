@@ -63,7 +63,7 @@ Problem Generator/
 - Every new problem MUST live in its own `problems/<name>/` folder.
 - The folder is created by the orchestrator (`create_problem` tool) which clones `templates/`.
 - Never work on problem files at the repo root — use `problems/<name>/` exclusively.
-- Problem folder names use `snake_case`, no digits or special characters except `_`.
+- Problem folder names use `snake_case`: lowercase letters, digits, and `_` only.
 
 ---
 
@@ -80,7 +80,7 @@ Inside every `problems/<name>/solutions/`:
 | `wa.cpp` | WA | Solution with a subtle intentional bug |
 
 **Rules:**
-- File names are lowercase, letters and `_` only — no digits, commas, or semicolons copied from the title.
+- File names use only lowercase letters, digits, and `_`.
 - Java class name must match the file name exactly (e.g. `acc_java.java` → `public class acc_java`).
 - Do **not** use `#pragma GCC optimize` or other compiler-optimization directives.
 
@@ -116,12 +116,14 @@ Structure: **Legend → Input Format → Output Format → Notes** (plus **Inter
 - Commit: `"Add problem statement"`
 
 **Checklist:**
+- [ ] Title has no commas or semicolons (they break CSV export)
 - [ ] Keep the statement **short and simple** — avoid long stories; they tend to change and hide the task
 - [ ] Legend and tutorial read like a person: simple English, clear task, not chatbot filler
 - [ ] **Main algorithmic idea is hidden** — describe *what* to compute, never *how*. Never name the required algorithm, data structure, or technique.
 - [ ] All variables written inside `$LaTeX math mode$`
-- [ ] Statement is **renderable to PDF** on Polygon
-- [ ] Each problem includes a **tutorial** (`statement/tutorial.tex`) renderable to PDF on Polygon
+- [ ] Known terms (**permutation**, **Fibonacci number**, **MEX**, ...) are defined in a `\footnote{...}`
+- [ ] Statement **renders to PDF and HTML** on Polygon
+- [ ] Each problem includes a **tutorial** (`statement/tutorial.tex`) that renders to PDF and HTML on Polygon
 - [ ] Tutorial is a full explanation **or** a brief summary with attached docs/slides
 - [ ] Tutorial covers: Key Observations → Solution → Complexity → Notes
 - [ ] Tutorial follows the same LaTeX rules as the statement (math mode, `\leq`, `\times`, etc.)
@@ -151,6 +153,7 @@ Uses `testlib.h` — validates every test satisfies problem constraints before u
 
 - Validate **whitespace and EOF strictly** — trailing spaces cause failures
 - Use named variables in `inf.read*()` for readable error messages
+- In multi-test problems, call `setTestCase(i)` at the start of each test case
 
 **Checklist:**
 - [ ] Validates the **input format** properly (bounds, whitespace, EOF)
@@ -162,14 +165,21 @@ Uses `testlib.h` — validates every test satisfies problem constraints before u
 
 ## 4. Checker
 
-**Standard checkers** (prefer these): `wcmp` (words) is the default, also `ncmp` (numbers), `nyesno` (yes/no per test case), `yesno`
+**Standard checkers** (prefer these), picked by output shape:
+
+- `ncmp` — integers only (one or more 64-bit integers)
+- `wcmp` — strings or mixed tokens
+- `yesno` — one yes/no; `nyesno` — zero or more yes/no answers (any letter case)
+- `rcmp4` / `rcmp6` / `rcmp9` — real numbers, absolute or relative error 1E-4 / 1E-6 / 1E-9
+- `lcmp` — lines, extra whitespace ignored; `fcmp` — lines compared exactly; `hcmp` — one huge integer
 
 **Custom checker** — use the `readAns` paradigm: one function reads both `ouf` and `ans` identically, catching bugs in both participant output and jury solution.
 
 **Checklist:**
-- [ ] Default checker is `wcmp` (or the appropriate standard checker)
+- [ ] Standard checker matches the output: `ncmp` for integers only, `wcmp` for strings or mixed output
+- [ ] Multi-test custom checker calls `setTestCase(i)` at the start of each test case
 - [ ] Custom checker uses the **readAns paradigm**
-- [ ] Checker has **test cases** (OK, WA, PE — even when using `wcmp`, add tests that confirm it is the right checker)
+- [ ] Checker has **test cases** in `checker_tests/` (OK, WA, PE — even for a standard checker; `wcmp` / `ncmp` never return PE; Polygon rejects an empty `.out`)
 - [ ] **Auto update** is enabled for the checker
 - [ ] Use `cpp17` / `java21`
 
@@ -179,7 +189,7 @@ Uses `testlib.h` — validates every test satisfies problem constraints before u
 
 **Checklist:**
 - [ ] **Auto update** enabled for `testlib.h`
-- [ ] No digits or special characters in file names, except `_`
+- [ ] File names use only lowercase letters, digits, and `_`
 - [ ] Use `cpp17` / `java21`
 
 ---
@@ -201,10 +211,10 @@ Uses `testlib.h` — validates every test satisfies problem constraints before u
 - [ ] `brute.cpp` — intentionally slow (TLE), or WA on interactive problems
 - [ ] `wa.cpp` — intentionally wrong solution (WA)
 - [ ] No compiler warnings in any solution
-- [ ] No `freopen` in any solution
+- [ ] No `freopen`, `#ifndef ONLINE_JUDGE`, or other local debug code
 - [ ] No `#pragma GCC optimize` / target-specific pragmas
 - [ ] Use `cpp17` / `java21`
-- [ ] No digits or special characters in file names, except `_`
+- [ ] File names use only lowercase letters, digits, and `_`
 - [ ] **All solution file base names must be distinct**
 
 ---
@@ -258,8 +268,9 @@ Uses `testlib.h` — validates every test satisfies problem constraints before u
 - [ ] **No two tests are equal** (script vs script, or script vs sample) — Polygon unique-test warning is a FAIL
 - [ ] Use **generators** for bulk test cases
 - [ ] Use **different generators** for variety
-- [ ] Include **1-2 hand-crafted edge cases**
-- [ ] Total test cases ≤ **30**
+- [ ] Include **1-2 hand-crafted edge cases** in `manual_tests/`
+- [ ] At least one test (the samples) is marked **Use in statements**
+- [ ] Total test cases ≤ **30** (samples + manual tests + script lines)
 - [ ] Use `while (t--)` style
 - [ ] Run generators via scripts in the Tests section
 
@@ -308,9 +319,9 @@ Before finishing a problem that is **not** Ace or Div2-A, search [yuantiji.ac](h
 
 - Commit after every logical step with a meaningful message
 - `testlib.h` → always enable **auto update** in Files section
-- No digits or special characters in **any** file name, except `_`
+- File names use only lowercase letters, digits, and `_`
 - Standard Input/Output for all problems
-- No `freopen` anywhere
+- No `freopen`, `#ifndef ONLINE_JUDGE`, or other local debug code in any source file
 - Java class name must match file name exactly
 - Use digit-separator constants in C++: `100'000` not `100000`, `10'000` not `10000`
 - Every new problem lives in `problems/<name>/` — never at the repo root

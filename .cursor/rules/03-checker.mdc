@@ -15,7 +15,14 @@ Apply the checker guidance from `tutorials/polygon-hints.md`, especially preferr
 ## Key Rules
 
 - Prefer standard checkers — only write custom when truly needed
-- Standard checkers: `wcmp` (tokens), `ncmp` (numbers), `nyesno` (YES/NO per test case), `yesno` (single YES/NO)
+- Pick the standard checker by output shape:
+  - `ncmp` — integers only (one or more 64-bit integers, whitespace ignored)
+  - `wcmp` — strings or mixed tokens (default when the output is not integers only)
+  - `yesno` — one YES/NO; `nyesno` — zero or more YES/NO answers (any letter case)
+  - `rcmp4` / `rcmp6` / `rcmp9` — real numbers with absolute or relative error 1E-4 / 1E-6 / 1E-9
+  - `lcmp` — lines, extra whitespace ignored; `fcmp` — lines compared exactly; `hcmp` — one huge integer
+- Multi-test custom checker: call `setTestCase(i)` at the start of each test case
+- Checker tests are required even for a standard checker: `checker_tests/<ok|wa|pe>_<name>.{in,out,ans}` (`.out` = participant, `.ans` = jury). `wcmp` and `ncmp` never return PE, so give them only `ok_` and `wa_` tests. Polygon rejects an empty `.out`, so every checker test needs some participant output
 - Use the `readAns` paradigm: one function reads both `ouf` and `ans` identically
 - `registerTestlibCmd(argc, argv)` at the start of `main`
 - Use `quitf(_ok, ...)` / `quitf(_wa, ...)` / `quitf(_pe, ...)` for verdicts

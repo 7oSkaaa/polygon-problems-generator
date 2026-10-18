@@ -45,6 +45,10 @@ problems/<name>/
 │   └── wa.cpp
 ├── generators/
 │   └── generator.cpp
+├── samples/            ← 01.in + 01.out, used in statements
+├── manual_tests/       ← 1–2 hand-written edge cases (*.in)
+├── validator_tests/    ← valid_* / invalid_*
+├── checker_tests/      ← ok_* / wa_* / pe_* (.in + .out + .ans)
 ├── validator.cpp
 ├── checker.cpp
 └── interactor.cpp      ← interactive only
@@ -53,7 +57,7 @@ problems/<name>/
 Create with:
 
 ```bash
-mkdir -p problems/<name>/{statement,solutions,generators,samples,validator_tests}
+mkdir -p problems/<name>/{statement,solutions,generators,samples,manual_tests,validator_tests,checker_tests}
 cp templates/validator.cpp            problems/<name>/validator.cpp
 cp templates/checker.cpp              problems/<name>/checker.cpp
 cp templates/statement/raw.tex        problems/<name>/statement/raw.tex
@@ -74,7 +78,7 @@ cp templates/generators/generator.cpp problems/<name>/generators/generator.cpp
 5. `checker-agent` → `checker.cpp` (or standard checker)
 6. `interactor-agent` → `interactor.cpp` if interactive
 7. `solutions-agent` → approaches, then `acc.cpp` + `acc_java.java` + `acc_alt.cpp` + `brute.cpp` + `wa.cpp`
-8. `generator-agent` → `generators/generator.cpp`
+8. `generator-agent` → `generators/generator.cpp`; then write samples, 1–2 hand-written edge cases in `manual_tests/`, validator tests, and checker tests
 9. `reviewer-agent` → fix every FAIL
 10. `./verify.sh problems/<name>` then `python -m polyup <name>`
 
@@ -85,8 +89,8 @@ Fixes: regenerate **only** the failing component (`/fix-component`). Paste the `
 ## Critical rules
 
 - Every problem lives in `problems/<name>/` — never at the repo root
-- Folder names: `snake_case`, letters and `_` only
-- No `freopen` in solutions, checkers, or interactors
+- File and folder names: lowercase letters, digits, and `_` only
+- No `freopen`, `#ifndef ONLINE_JUDGE`, or other local debug code in any source file
 - No compiler warnings; C++ `cpp17`, Java `java21`
 - Java class name matches the file name exactly
 - Standard Input/Output
@@ -97,16 +101,22 @@ Fixes: regenerate **only** the failing component (`/fix-component`). Paste the `
 - Java solutions use the minimal template (`templates/solutions/solution.java`) — `Scanner` + `solve()`, no extra helpers
 - Main ACC is clear and relaxed — do not set the time limit from a micro-optimized code
 - Statements stay short; avoid long stories; hide the algorithm; legend and tutorial use simple human English (not chatbot prose)
-- Images: EPS only, with a bounding box — never JPG/PNG
-- Prefer standard checker `wcmp` unless a custom checker is required
+- Statement title has no commas or semicolons (they break CSV export)
+- Known terms (permutation, MEX, Fibonacci number, ...) are defined in a `\footnote{...}`
+- Statement and tutorial render to both PDF and HTML on Polygon
+- Images: EPS only, with a bounding box — never JPG/PNG; black and white unless color is needed
+- Checker: standard when possible. `ncmp` when the output is integers only, `wcmp` for strings or mixed output, `yesno` / `nyesno` for YES/NO, `rcmp4` / `rcmp6` / `rcmp9` for real numbers. Custom only when no standard checker fits
+- Checker tests in `checker_tests/`, even for a standard checker
+- Tags: a `#topic` tag (e.g. `#binary_search`) and a `#difficulty` tag (e.g. `#div2-A`)
 - Originality: non-Ace / non-Div2-A problems that yuantiji flags as similar/copy must not proceed
-- Polygon tests must be unique: no two generator-script invocations (and no script test vs a sample) may produce the same input
+- Polygon tests must be unique: no two generator-script invocations (and no script test vs a sample or manual test) may produce the same input
+- At most 30 tests in total: samples + `manual_tests/` + script lines
 
 ## Single vs multi-test vs interactive
 
 Decide `multitest` and `interactive` once; pass them to every sub-agent.
 
-- **Multi-test:** T on the first line; validator loops; generator `-T` + `rnd.partition`; solutions read T
+- **Multi-test:** T on the first line; validator loops and calls `setTestCase(i)` per test case; generator `-T` + `rnd.partition`; solutions read T
 - **Single-test:** no T; no partition; solutions keep `test_cases = 1`
 - **Interactive:** generate `interactor.cpp`; statement has Interaction + flush + “exit on `-1`”; solutions flush; never `cin.tie(nullptr)`
 
@@ -125,7 +135,14 @@ Apply the checker guidance from `tutorials/polygon-hints.md`, especially preferr
 ## Key Rules
 
 - Prefer standard checkers — only write custom when truly needed
-- Standard checkers: `wcmp` (tokens), `ncmp` (numbers), `nyesno` (YES/NO per test case), `yesno` (single YES/NO)
+- Pick the standard checker by output shape:
+  - `ncmp` — integers only (one or more 64-bit integers, whitespace ignored)
+  - `wcmp` — strings or mixed tokens (default when the output is not integers only)
+  - `yesno` — one YES/NO; `nyesno` — zero or more YES/NO answers (any letter case)
+  - `rcmp4` / `rcmp6` / `rcmp9` — real numbers with absolute or relative error 1E-4 / 1E-6 / 1E-9
+  - `lcmp` — lines, extra whitespace ignored; `fcmp` — lines compared exactly; `hcmp` — one huge integer
+- Multi-test custom checker: call `setTestCase(i)` at the start of each test case
+- Checker tests are required even for a standard checker: `checker_tests/<ok|wa|pe>_<name>.{in,out,ans}` (`.out` = participant, `.ans` = jury). `wcmp` and `ncmp` never return PE, so give them only `ok_` and `wa_` tests. Polygon rejects an empty `.out`, so every checker test needs some participant output
 - Use the `readAns` paradigm: one function reads both `ouf` and `ans` identically
 - `registerTestlibCmd(argc, argv)` at the start of `main`
 - Use `quitf(_ok, ...)` / `quitf(_wa, ...)` / `quitf(_pe, ...)` for verdicts
@@ -172,6 +189,7 @@ Apply the generator and stress guidance from `tutorials/polygon-hints.md`, espec
   - Do not repeat a sample input in the script
   - Each random line must have a **unique extra seed token** (e.g. `generator -type random 1 > 10`)
   - Prefer fully specified distinct tuples when the input space is tiny (Ace / few integers)
+- At most 30 tests in total: samples + `manual_tests/` + script lines. Leave room for 1–2 hand-written edge cases
 - Compile with cpp17, no warnings
 
 ## Multi-test vs Single-test
@@ -289,10 +307,10 @@ You are a strict competitive programming problem reviewer. Your job is to find e
 
 ## Review Hints by Component
 
-- **statement** — short simple legend (avoid long stories), simple human English (not chatbot prose), all variables in math mode, preferred wording from `tutorials/polygon-hints.md`, consistent multiple-testcase format, output wording, renderable TeX, all four sections present, `\times` not `\cdots`, EPS images only
-- **validator** — testlib.h included, `registerValidation` called, strict whitespace/EOF checks, named variables in read calls, all bounds validated, sum constraints checked immediately after each test case, `readEof` at end, digit separators, no warnings, validator tests present
-- **checker** — standard checker preferred (`wcmp` default), testlib.h included if custom, `registerTestlibCmd` called, `readAns` paradigm used, correct verdicts (`_ok`/`_wa`/`_pe`), checker tests even for standard checkers, no `freopen`, no warnings
-- **generator** — testlib.h included, `registerGen` called, `opt<>` for CLI params, `rnd.partition` for multi-test budgets, `println` output, edge/random/adversarial/max-IO coverage, FreeMarker script present, **no duplicate tests** (script lines and samples must all yield distinct inputs), no warnings
+- **statement** — short simple legend (avoid long stories), simple human English (not chatbot prose), all variables in math mode, preferred wording from `tutorials/polygon-hints.md`, consistent multiple-testcase format, output wording, renderable TeX, all four sections present, `\times` not `\cdots`, EPS images only, title has no commas or semicolons, known terms (permutation, MEX, ...) defined in a `\footnote`
+- **validator** — testlib.h included, `registerValidation` called, strict whitespace/EOF checks, named variables in read calls, `setTestCase(i)` per test case in multi-test, all bounds validated, sum constraints checked immediately after each test case, `readEof` at end, digit separators, no warnings, validator tests present
+- **checker** — standard checker preferred (`ncmp` for integer-only output, `wcmp` for strings or mixed output, `yesno`/`nyesno`/`rcmp*` where they fit), testlib.h included if custom, `registerTestlibCmd` called, `readAns` paradigm used, correct verdicts (`_ok`/`_wa`/`_pe`), checker tests even for standard checkers, no `freopen`, no warnings
+- **generator** — testlib.h included, `registerGen` called, `opt<>` for CLI params, `rnd.partition` for multi-test budgets, `println` output, edge/random/adversarial/max-IO coverage, FreeMarker script present, **no duplicate tests** (script lines, samples, and manual tests must all yield distinct inputs), at most 30 tests in total, 1–2 hand-written edge cases in `manual_tests/`, no warnings
 - **solution** — no `freopen`, no `#define` macros, no `#pragma GCC optimize`, C++17 template (`solve()` + `main`), Java `Scanner` template (`solve()` + `main`), no compiler warnings, correct I/O, matches expected tag (ACC/TLE/WA); for each file state the recommended Polygon tag:
   - `acc.cpp` → **Main correct solution** (clear, not over-optimized)
   - `acc_java.java` → **Correct solution**
@@ -416,6 +434,8 @@ The statement must describe **what** to compute, never **how**.
 - Use `\texttt{...}` for monospace (code, file names)
 - Use `\textbf{...}` for bold emphasis
 - Use `lstlisting` for code snippets in tutorials
+- Define known terms (permutation, MEX, Fibonacci number, ...) in a `\footnote{...}` the first time they appear
+- The text must render to both PDF and HTML on Polygon
 - Write like a person, not a chatbot (see **Human writing** below). This applies to the legend, notes, and the whole tutorial.
 
 ## Human writing (statement and tutorial)
@@ -458,8 +478,9 @@ After writing, reread the legend and tutorial and cut anything that still sounds
 - Keep the legend **short and simple** (2–4 sentences). Avoid long stories — they tend to change and hide the task
 - State the setting only if it is needed to understand the input; then state the task clearly
 - Never name or hint at the algorithm
-- Images, if any, must be EPS with a bounding box — never JPG or PNG
+- Images, if any, must be EPS with a bounding box — never JPG or PNG. Black and white unless color is needed
 - Use `\times` for multiplication (never `\cdots` or the letter `x`)
+- The title has no commas or semicolons (they break CSV export)
 
 ## Statement Output Format
 
@@ -562,6 +583,7 @@ Apply the validator guidance from `tutorials/polygon-hints.md`, especially named
 - Always include `#include "testlib.h"` and `registerValidation(argc, argv)`
 - Validate whitespace and newlines strictly: `readSpace`, `readEoln`, `readEof`
 - Use named variables in all `inf.read*()` calls
+- Multi-test: call `setTestCase(i)` at the start of each test case so errors name the failing test case
 - Reject trailing spaces — check whitespace precisely after every value
 - Use digit-separator constants: `100'000` not `100000`
 - End with `inf.readEof()`

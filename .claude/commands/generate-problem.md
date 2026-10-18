@@ -60,7 +60,7 @@ Apply `tutorials/polygon-hints.md` throughout the pipeline, especially for state
 Use Bash to create the folder structure and copy templates:
 
 ```bash
-mkdir -p problems/<name>/statement problems/<name>/solutions problems/<name>/generators problems/<name>/samples problems/<name>/validator_tests
+mkdir -p problems/<name>/statement problems/<name>/solutions problems/<name>/generators problems/<name>/samples problems/<name>/manual_tests problems/<name>/validator_tests problems/<name>/checker_tests
 cp templates/validator.cpp            problems/<name>/validator.cpp
 cp templates/checker.cpp              problems/<name>/checker.cpp
 cp templates/statement/raw.tex        problems/<name>/statement/raw.tex
@@ -192,14 +192,20 @@ Agent(
 Problem description: <statement param>
 Output format: <describe the expected output>
 
-Standard checkers: wcmp (tokens), ncmp (numbers), nyesno (YES/NO per test case), yesno (single YES/NO).
+Standard checkers: ncmp (integers only), wcmp (strings or mixed tokens), yesno (one YES/NO), nyesno (YES/NO per test case), rcmp4/rcmp6/rcmp9 (real numbers), lcmp/fcmp (lines), hcmp (one huge integer).
+If the output is integers only, use ncmp; if it mixes strings and numbers, use wcmp.
 Apply checker guidance from tutorials/polygon-hints.md. Prefer a standard checker whenever it is sufficient.
 
 Respond with RECOMMENDATION and REASON."
 )
 ```
 
-If the recommendation is a standard checker, note it (no file to write — it is selected in Polygon).
+If the recommendation is a standard checker, write `problems/<name>/checker.cpp` as a two-line marker that `verify.sh` and `polyup` read:
+
+```cpp
+// Use standard checker: ncmp
+// <one line: what the output looks like>
+```
 If a custom checker is needed, spawn another fresh sub-agent:
 
 ```
@@ -388,7 +394,9 @@ Desired test variety: random cases, edge cases (min/max values), stress cases
 
 Apply generator guidance from tutorials/polygon-hints.md, including edge/random/adversarial/max-IO coverage and a useful FreeMarker script.
 
-CRITICAL: every FreeMarker script line must produce a UNIQUE input. No two lines (and no line vs a sample) may generate the same test — Polygon reports 'Tests with indices X, Y are equal'. Pin all variables on edge tests; unique seeds on random tests; do not repeat equivalent commands.
+CRITICAL: every FreeMarker script line must produce a UNIQUE input. No two lines (and no line vs a sample or manual test) may generate the same test — Polygon reports 'Tests with indices X, Y are equal'. Pin all variables on edge tests; unique seeds on random tests; do not repeat equivalent commands.
+
+Keep the total at 30 tests or fewer: samples + 1–2 manual tests + script lines.
 
 Include a FreeMarker script example as a comment block at the end. Return only the C++ code."
 )
@@ -409,6 +417,8 @@ For each sample (typically 1 sample for simple problems, up to 2–4 for problem
 - etc.
 
 The sample input/output must exactly match what appears in the statement's `\Note` section. For multitest problems, the sample input includes the test count on the first line.
+
+Then write **1–2 hand-written edge cases** as `problems/<name>/manual_tests/01.in`, `02.in` (input only; Polygon computes the answer with the main solution). Pick cases a random generator rarely hits: exhaustive tiny inputs, ties, the trap of the WA solution. They are uploaded as manual tests, not used in statements, and must differ from the samples and every script test.
 
 ---
 
@@ -431,6 +441,17 @@ Create at minimum:
 - `invalid_no_eof.txt` — missing EOF or extra data after valid input
 
 Adjust the specific invalid cases based on the problem's constraints. Every constraint boundary should have at least one valid and one invalid test.
+
+---
+
+## Step 10d — Write checker tests
+
+Checker tests are required even for a standard checker. Write `problems/<name>/checker_tests/<stem>.in`, `<stem>.out` (participant output), and `<stem>.ans` (jury answer). The stem prefix sets the expected verdict: `ok_`, `wa_`, `pe_`.
+
+- At least: `ok_exact`, one `ok_` whitespace variant, `wa_wrong_value`, `wa_extra_token`
+- Add `wa_missing_token` only when the answer has two or more tokens. Polygon rejects an empty `.out`
+- `wcmp` and `ncmp` never return PE, so do not add `pe_` tests for them
+- Custom checker: cover every distinct `quitf` reason it can return
 
 ---
 
@@ -475,7 +496,7 @@ Based on the problem statement, solution approach, and constraints, choose appro
 
 `math`, `implementation`, `greedy`, `dp`, `binary search`, `brute force`, `constructive algorithms`, `data structures`, `dfs and similar`, `graphs`, `number theory`, `sortings`, `strings`, `trees`, `two pointers`, `bitmasks`, `combinatorics`, `geometry`, `hashing`, `interactive`, `shortest paths`, `probabilities`, `games`, `divide and conquer`, `dsu`, `flows`, `fft`, `2-sat`, `ternary search`, `matrices`, `string suffix structures`, `chinese remainder theorem`, `meet-in-the-middle`, `expression parsing`, `schedules`
 
-Pick only tags that genuinely apply. Also add a `#difficulty` tag matching `difficulty.txt` (e.g. `#div2-C`) and a `#topic` tag for the main algorithm. Write one tag per line to `problems/<name>/tags.txt`. These are uploaded to Polygon automatically by `python3 -m polyup`.
+Pick only tags that genuinely apply. Also add a `#difficulty` tag matching `difficulty.txt`, written like `#div2-A` / `#div2-C` (capital letter) and a `#topic` tag for the main algorithm. Write one tag per line to `problems/<name>/tags.txt`. These are uploaded to Polygon automatically by `python3 -m polyup`.
 
 ---
 

@@ -47,13 +47,14 @@ graph TD
 
 ### `PolygonAPI` Execution Flow
 
-The `PolygonAPI.call` method handles parameter filtration, signature attachment, rate-limiting delays, and JSON response validation:
-* **Parameters & Authentication**: Injects `apiKey` and current UNIX epoch `time` into the request payload [polyup/api.py:31-35](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/polyup/api.py#L31-L35).
-* **File Handling**: If `_files` is provided, file byte content is bound into the parameter dictionary before signing [polyup/api.py:36-41](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/polyup/api.py#L36-L41).
-* **Error Handling**: Non-JSON responses or API statuses other than `OK` trigger fatal terminations (`sys.exit(1)`) unless `fatal=False` is explicitly passed [polyup/api.py:48-60](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/polyup/api.py#L48-L60).
-* **Rate Limiting**: Enforces a configurable delay (`self.delay`, default `0.3` seconds) between successful calls [polyup/api.py:26,62]().
+`PolygonAPI._post` builds and signs one request. `PolygonAPI.call` sends it, retries throttled calls, and checks the JSON response:
+* **Parameters & Authentication**: Injects `apiKey` and current UNIX epoch `time` into the request payload [polyup/api.py:33-35](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/polyup/api.py#L33-L35).
+* **File Handling**: If `_files` is provided, file byte content is bound into the parameter dictionary before signing [polyup/api.py:37-44](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/polyup/api.py#L37-L44).
+* **Throttling**: Polygon answers bursts with HTTP 429 and an HTML page. `call` re-signs and retries up to `MAX_RETRIES = 6` times, waiting 1, 2, 4, 8 and 16 seconds [polyup/api.py:48-54](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/polyup/api.py#L48-L54).
+* **Error Handling**: Non-JSON responses (printed with their HTTP status) or API statuses other than `OK` trigger fatal terminations (`sys.exit(1)`) unless `fatal=False` is explicitly passed [polyup/api.py:56-68](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/polyup/api.py#L56-L68).
+* **Rate Limiting**: Enforces a configurable delay (`self.delay`, default `0.3` seconds) between successful calls [polyup/api.py:27,70](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/polyup/api.py#L70).
 
-Sources: [polyup/api.py:1-65](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/polyup/api.py#L1-L65)
+Sources: [polyup/api.py:1-73](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/polyup/api.py#L1-L73)
 
 ---
 

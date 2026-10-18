@@ -146,7 +146,8 @@ Interactive notice:
 
 ## Checkers
 
-- Prefer a standard checker when it fits (`ncmp`, `wcmp`, `yesno`, `nyesno`, etc.).
+- Prefer a standard checker when it fits: `ncmp` for integers only, `wcmp` for strings or mixed output, `yesno` / `nyesno` for YES/NO, `rcmp4` / `rcmp6` / `rcmp9` for real numbers.
+- Add checker tests even for a standard checker.
 - Do not revalidate input already validated by the validator.
 - Read the jury answer and participant output in the same way.
 - For `-1 or construction` formats, first read one integer/token, then decide whether to read the rest.
@@ -169,6 +170,7 @@ Generator guidelines:
 - Avoid too many or too few generators.
 - For easy problems with limited pretests, merge generators if needed.
 - Generate minimum and maximum input values.
+- Add 1–2 hand-written edge cases in `manual_tests/`, and keep the total at 30 tests or fewer.
 - Generate tests minimizing and maximizing the answer when meaningful.
 - Sometimes use a solution as the base of a generator.
 - Generate tests that maximize total input, output, or input+output characters.

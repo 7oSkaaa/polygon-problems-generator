@@ -18,6 +18,7 @@ Apply the validator guidance from `tutorials/polygon-hints.md`, especially named
 - Always include `#include "testlib.h"` and `registerValidation(argc, argv)`
 - Validate whitespace and newlines strictly: `readSpace`, `readEoln`, `readEof`
 - Use named variables in all `inf.read*()` calls
+- Multi-test: call `setTestCase(i)` at the start of each test case so errors name the failing test case
 - Reject trailing spaces — check whitespace precisely after every value
 - Use digit-separator constants: `100'000` not `100000`
 - End with `inf.readEof()`

@@ -31,6 +31,8 @@ The statement must describe **what** to compute, never **how**.
 - Use `\texttt{...}` for monospace (code, file names)
 - Use `\textbf{...}` for bold emphasis
 - Use `lstlisting` for code snippets in tutorials
+- Define known terms (permutation, MEX, Fibonacci number, ...) in a `\footnote{...}` the first time they appear
+- The text must render to both PDF and HTML on Polygon
 - Write like a person, not a chatbot (see **Human writing** below). This applies to the legend, notes, and the whole tutorial.
 
 ## Human writing (statement and tutorial)
@@ -73,8 +75,9 @@ After writing, reread the legend and tutorial and cut anything that still sounds
 - Keep the legend **short and simple** (2–4 sentences). Avoid long stories — they tend to change and hide the task
 - State the setting only if it is needed to understand the input; then state the task clearly
 - Never name or hint at the algorithm
-- Images, if any, must be EPS with a bounding box — never JPG or PNG
+- Images, if any, must be EPS with a bounding box — never JPG or PNG. Black and white unless color is needed
 - Use `\times` for multiplication (never `\cdots` or the letter `x`)
+- The title has no commas or semicolons (they break CSV export)
 
 ## Statement Output Format
 

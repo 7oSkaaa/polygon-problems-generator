@@ -43,6 +43,10 @@ problems/<name>/
 │   └── wa.cpp
 ├── generators/
 │   └── generator.cpp
+├── samples/            ← 01.in + 01.out, used in statements
+├── manual_tests/       ← 1–2 hand-written edge cases (*.in)
+├── validator_tests/    ← valid_* / invalid_*
+├── checker_tests/      ← ok_* / wa_* / pe_* (.in + .out + .ans)
 ├── validator.cpp
 ├── checker.cpp
 └── interactor.cpp      ← interactive only
@@ -51,7 +55,7 @@ problems/<name>/
 Create with:
 
 ```bash
-mkdir -p problems/<name>/{statement,solutions,generators,samples,validator_tests}
+mkdir -p problems/<name>/{statement,solutions,generators,samples,manual_tests,validator_tests,checker_tests}
 cp templates/validator.cpp            problems/<name>/validator.cpp
 cp templates/checker.cpp              problems/<name>/checker.cpp
 cp templates/statement/raw.tex        problems/<name>/statement/raw.tex
@@ -72,7 +76,7 @@ cp templates/generators/generator.cpp problems/<name>/generators/generator.cpp
 5. `checker-agent` → `checker.cpp` (or standard checker)
 6. `interactor-agent` → `interactor.cpp` if interactive
 7. `solutions-agent` → approaches, then `acc.cpp` + `acc_java.java` + `acc_alt.cpp` + `brute.cpp` + `wa.cpp`
-8. `generator-agent` → `generators/generator.cpp`
+8. `generator-agent` → `generators/generator.cpp`; then write samples, 1–2 hand-written edge cases in `manual_tests/`, validator tests, and checker tests
 9. `reviewer-agent` → fix every FAIL
 10. `./verify.sh problems/<name>` then `python -m polyup <name>`
 
@@ -83,8 +87,8 @@ Fixes: regenerate **only** the failing component (`/fix-component`). Paste the `
 ## Critical rules
 
 - Every problem lives in `problems/<name>/` — never at the repo root
-- Folder names: `snake_case`, letters and `_` only
-- No `freopen` in solutions, checkers, or interactors
+- File and folder names: lowercase letters, digits, and `_` only
+- No `freopen`, `#ifndef ONLINE_JUDGE`, or other local debug code in any source file
 - No compiler warnings; C++ `cpp17`, Java `java21`
 - Java class name matches the file name exactly
 - Standard Input/Output
@@ -95,15 +99,21 @@ Fixes: regenerate **only** the failing component (`/fix-component`). Paste the `
 - Java solutions use the minimal template (`templates/solutions/solution.java`) — `Scanner` + `solve()`, no extra helpers
 - Main ACC is clear and relaxed — do not set the time limit from a micro-optimized code
 - Statements stay short; avoid long stories; hide the algorithm; legend and tutorial use simple human English (not chatbot prose)
-- Images: EPS only, with a bounding box — never JPG/PNG
-- Prefer standard checker `wcmp` unless a custom checker is required
+- Statement title has no commas or semicolons (they break CSV export)
+- Known terms (permutation, MEX, Fibonacci number, ...) are defined in a `\footnote{...}`
+- Statement and tutorial render to both PDF and HTML on Polygon
+- Images: EPS only, with a bounding box — never JPG/PNG; black and white unless color is needed
+- Checker: standard when possible. `ncmp` when the output is integers only, `wcmp` for strings or mixed output, `yesno` / `nyesno` for YES/NO, `rcmp4` / `rcmp6` / `rcmp9` for real numbers. Custom only when no standard checker fits
+- Checker tests in `checker_tests/`, even for a standard checker
+- Tags: a `#topic` tag (e.g. `#binary_search`) and a `#difficulty` tag (e.g. `#div2-A`)
 - Originality: non-Ace / non-Div2-A problems that yuantiji flags as similar/copy must not proceed
-- Polygon tests must be unique: no two generator-script invocations (and no script test vs a sample) may produce the same input
+- Polygon tests must be unique: no two generator-script invocations (and no script test vs a sample or manual test) may produce the same input
+- At most 30 tests in total: samples + `manual_tests/` + script lines
 
 ## Single vs multi-test vs interactive
 
 Decide `multitest` and `interactive` once; pass them to every sub-agent.
 
-- **Multi-test:** T on the first line; validator loops; generator `-T` + `rnd.partition`; solutions read T
+- **Multi-test:** T on the first line; validator loops and calls `setTestCase(i)` per test case; generator `-T` + `rnd.partition`; solutions read T
 - **Single-test:** no T; no partition; solutions keep `test_cases = 1`
 - **Interactive:** generate `interactor.cpp`; statement has Interaction + flush + “exit on `-1`”; solutions flush; never `cin.tie(nullptr)`

@@ -14,14 +14,18 @@ A checker verifies whether the participant's output is correct. Required when th
 
 ## Standard Checkers (use when possible)
 
-| Checker | Use case |
+| Checker                     | Use case                                          |
 |---|---|
-| `wcmp` | General token comparison — default choice |
-| `ncmp` | Sequence of integers |
-| `nyesno` | Sequence of YES/NO answers |
-| `fcmp` | Line-by-line comparison |
-| `rcmp4` / `rcmp6` / `rcmp9` | Real numbers with 1e-4 / 1e-6 / 1e-9 tolerance |
-| `yesno` | Single YES or NO |
+| `ncmp`                      | Integers only (one or more 64-bit integers)       |
+| `wcmp`                      | Strings or mixed tokens                           |
+| `yesno`                     | Single YES or NO, any letter case                 |
+| `nyesno`                    | Zero or more YES/NO answers, any letter case      |
+| `rcmp4` / `rcmp6` / `rcmp9` | Real numbers with 1e-4 / 1e-6 / 1e-9 tolerance    |
+| `lcmp`                      | Lines, extra whitespace ignored                   |
+| `fcmp`                      | Lines compared exactly                            |
+| `hcmp`                      | One huge integer                                  |
+
+Output is integers only → `ncmp`. Output mixes strings and numbers → `wcmp`.
 
 Enable **auto update** for whichever checker you use.
 
@@ -155,7 +159,7 @@ quitf(_ok, "%d test cases verified", t);
 
 ## Checker Tests
 
-Add tests in Polygon under the **Checker** tab. Cover:
+Add tests in `checker_tests/` (uploaded to the Polygon **Checker** tab), even for a standard checker. Name them `ok_*`, `wa_*`, `pe_*` with `.in`, `.out` (participant), and `.ans` (jury). Polygon rejects an empty `.out`. For a custom checker, cover:
 
 | Test | Expected verdict |
 |---|---|
@@ -165,11 +169,14 @@ Add tests in Polygon under the **Checker** tab. Cover:
 | Missing answer / empty output | PRESENTATION_ERROR |
 | Invalid format (non-integer) | PRESENTATION_ERROR |
 
+`wcmp` and `ncmp` never return PRESENTATION_ERROR: extra or missing tokens give WRONG_ANSWER. Give them only `ok_` and `wa_` tests.
+
 ---
 
 ## Rules
 
-- Default to `wcmp` — only write a custom checker when necessary
+- Use a standard checker when one fits (`ncmp` for integers only, `wcmp` for strings or mixed output) — only write a custom checker when necessary
+- Multi-test custom checker: call `setTestCase(i)` at the start of each test case
 - Use the **readAns paradigm** for all custom checkers
 - Write **informative** `quitf` messages — contestants may see them after the contest
 - Enable **auto update**

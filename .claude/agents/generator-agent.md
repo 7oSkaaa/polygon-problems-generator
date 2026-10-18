@@ -37,6 +37,7 @@ Apply the generator and stress guidance from `tutorials/polygon-hints.md`, espec
   - Do not repeat a sample input in the script
   - Each random line must have a **unique extra seed token** (e.g. `generator -type random 1 > 10`)
   - Prefer fully specified distinct tuples when the input space is tiny (Ace / few integers)
+- At most 30 tests in total: samples + `manual_tests/` + script lines. Leave room for 1–2 hand-written edge cases
 - Compile with cpp17, no warnings
 
 ## Multi-test vs Single-test

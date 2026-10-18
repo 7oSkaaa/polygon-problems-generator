@@ -86,8 +86,8 @@ The Checker Agent recommends standard Polygon checkers or synthesizes custom `ch
 
 ### Standard vs Custom Checkers
 Standard checkers should be preferred whenever applicable to minimize maintenance and edge-case bugs [[tutorials/checker.md:15-25](https://github.com/7oSkaaa/polygon-problems-generator/blob/main/tutorials/checker.md#L15-L25)]:]:
-- `wcmp`: Token-by-token comparison (default)
-- `ncmp`: Sequence of integers
+- `ncmp`: Integers only (use it whenever the output is integers only)
+- `wcmp`: Token-by-token comparison (strings or mixed output)
 - `nyesno`: Sequence of YES/NO answers per test case
 - `yesno`: Single YES/NO answer
 - `rcmp4` / `rcmp6` / `rcmp9`: Floating-point comparisons with tolerances

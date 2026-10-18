@@ -205,7 +205,7 @@ Use when you need one file per test case.
 - **1–2 hand-crafted edge cases** added manually
 
 ### Limits
-- Keep total test count **≤ 30**
+- Keep total test count **≤ 30** (samples + `manual_tests/` + script lines)
 - Use `while (t--)` style multi-test
 
 ### Suggested test batches
@@ -247,7 +247,7 @@ gen -t 10 -sum-n 100 -min-val 1 -max-val 100 [1..50]
 
 - Use `cpp17`
 - Enable **auto update** for `testlib.h`
-- No digits or special characters in file names except `_`
+- File names use only lowercase letters, digits, and `_`
 - Generator must be **reproducible** — same args → same output everywhere
 - **No duplicate tests** — two script invocations (or a script test and a sample) must never produce the same input. Polygon reports `Tests with indices X, Y in testset 'tests' are equal`. Pin all variables on edges; unique seed tokens on random lines; do not re-emit sample inputs
 - Use `rnd.partition` for distributing sums, not manual loops

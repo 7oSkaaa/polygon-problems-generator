@@ -9,6 +9,7 @@ import time
 import requests
 
 BASE_URL = "https://polygon.codeforces.com/api"
+MAX_RETRIES = 6
 
 
 def _make_signature(method: str, params: dict, secret: str) -> str:
@@ -28,7 +29,7 @@ class PolygonAPI:
         self.api_secret = api_secret
         self.delay = delay
 
-    def call(self, method: str, fatal: bool = True, **kwargs):
+    def _post(self, method: str, kwargs: dict) -> requests.Response:
         params = {k: v for k, v in kwargs.items() if v is not None and k != "_files"}
         params["apiKey"] = self.api_key
         params["time"] = str(int(time.time()))
@@ -40,17 +41,24 @@ class PolygonAPI:
                 params[field_name] = content
             params["apiSig"] = _make_signature(method, params, self.api_secret)
             del params["file"]
-            resp = requests.post(f"{BASE_URL}/{method}", data=params, files=files)
-        else:
-            params["apiSig"] = _make_signature(method, params, self.api_secret)
-            resp = requests.post(f"{BASE_URL}/{method}", data=params)
+            return requests.post(f"{BASE_URL}/{method}", data=params, files=files)
+        params["apiSig"] = _make_signature(method, params, self.api_secret)
+        return requests.post(f"{BASE_URL}/{method}", data=params)
+
+    def call(self, method: str, fatal: bool = True, **kwargs):
+        # Polygon throttles bursts with HTTP 429 and an HTML body; back off and re-sign.
+        for attempt in range(MAX_RETRIES):
+            resp = self._post(method, kwargs)
+            if resp.status_code != 429 or attempt == MAX_RETRIES - 1:
+                break
+            time.sleep(2 ** attempt)
 
         try:
             data = resp.json()
         except Exception:
             if not fatal:
                 return None
-            print(f"  API error [{method}]: non-JSON response", file=sys.stderr)
+            print(f"  API error [{method}]: non-JSON response (HTTP {resp.status_code})", file=sys.stderr)
             sys.exit(1)
         if data.get("status") != "OK":
             msg = data.get("comment", data)

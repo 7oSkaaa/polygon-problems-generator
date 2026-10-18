@@ -140,5 +140,5 @@ Add tests in Polygon under the **Validator** tab. Cover:
 
 - Use `cpp17`
 - Enable **auto update** for `testlib.h` in Files section
-- No digits or special characters in file name except `_`
+- File names use only lowercase letters, digits, and `_`
 - Add **test cases** to verify validator behavior

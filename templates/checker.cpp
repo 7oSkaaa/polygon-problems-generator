@@ -3,10 +3,11 @@
 using namespace std;
 
 // Standard checkers — use these when possible (Polygon → Files → Checker):
-//   wcmp    — general token/word comparison  (default choice)
-//   ncmp    — sequence of integers
+//   ncmp    — integers only (one or more 64-bit integers)
+//   wcmp    — strings or mixed tokens
 //   nyesno  — sequence of YES/NO answers (one per test case)
 //   yesno   — single YES/NO answer
+//   rcmp4 / rcmp6 / rcmp9 — real numbers with 1e-4 / 1e-6 / 1e-9 error
 //
 // Custom checker — implement only when multiple valid outputs exist.
 // Always use the readAns paradigm: one function reads both ouf and ans.

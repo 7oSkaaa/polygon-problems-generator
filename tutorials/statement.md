@@ -434,7 +434,9 @@ Column alignment characters: `l` (left), `r` (right), `c` (center), `|` (vertica
 ## Writing Rules
 
 - Keep the statement **short and simple** — avoid long stories (they may need to change)
-- The statement must be **renderable to PDF** on Polygon — check it
+- The statement must **render to PDF and HTML** on Polygon — check it
+- The title has no commas or semicolons (they break CSV export)
+- Define known terms (**permutation**, **Fibonacci number**, **MEX**, ...) in a `\footnote{...}`
 - Use **GPT + Grammarly** to refine and proofread text
 - Pay close attention to **LaTeX correctness** — compile to PDF and review
 - Separators between values in input: `~` (non-breaking space) or regular space — be consistent
@@ -443,7 +445,7 @@ Column alignment characters: `l` (left), `r` (right), `c` (center), `|` (vertica
 
 ## Tutorial
 
-Each problem **must** include a tutorial, also renderable to PDF:
+Each problem **must** include a tutorial that also renders to PDF and HTML:
 - Either a **full explanation** of the solution
 - Or a **brief summary** with a link to attached docs/slides
 

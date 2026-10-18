@@ -98,8 +98,10 @@ problems/<name>/
 ├── validator.cpp
 ├── checker.cpp
 ├── interactor.cpp             ← interactive only
-├── samples/
+├── samples/                   ← used in statements
+├── manual_tests/              ← 1–2 hand-written edge cases (*.in)
 ├── validator_tests/
+├── checker_tests/             ← ok_* / wa_* / pe_* (.in + .out + .ans)
 ├── tags.txt                   ← #topic and #difficulty
 ├── difficulty.txt
 └── originality.json
@@ -197,7 +199,7 @@ python -m polyup stress water_bottles
 
 Uploads metadata, statement, tutorial, validator, checker, interactor, solutions (`acc` = MA, `acc_java` / `acc_alt` = OK, `brute` = TL or WA if interactive, `wa` = WA), generator + FreeMarker script, validator tests, checker tests (if present), tags; then commits, builds the package (`verify=true` unless `--no-verify`), grants access, and prints HARD cautions.
 
-The upload also renders the statement and tutorial on Polygon and prints any HTML or PDF render error. It keeps Polygon's duplicate-test check on. On a re-upload it deletes what is gone locally: solutions, source files (old generators, a custom checker replaced by a standard one), manual tests, validator tests and checker tests. A list is only cleaned when its local folder exists. Polygon keeps old revisions, so a deleted file can still be found there.
+The upload also renders the statement and tutorial on Polygon and prints any HTML or PDF render error. It keeps Polygon's duplicate-test check on. On a re-upload it deletes what is gone locally: solutions, source files (old generators, a custom checker replaced by a standard one), manual tests, validator tests and checker tests. A list is only cleaned when its local folder exists. Polygon keeps old revisions, so a deleted file can still be found there. If Polygon throttles a call with HTTP 429, polyup waits 1, 2, 4, 8 and 16 seconds between retries before it gives up.
 
 `python -m polyup stress <name>` runs a stress on Polygon. The pattern is `generator <stress.conf> [1..1000000000]` and it compares every OK/TL solution with the main one. It prints the countertest if one is found and exits with code 1. The stress is saved in your working copy and is committed with the next upload. Use `--wait` to change the 600 second polling limit.
 
@@ -228,7 +230,7 @@ Example `access.json`:
 
 `problem.setAccess` takes effect immediately (no commit). It cannot assign `OWNER` or `@group` logins. You need **direct** WRITE or OWNER on the problem.
 
-Checker tests (optional) live in `checker_tests/` as `ok_sample.in` + `.out` + `.ans` (prefixes: `ok_`, `wa_`, `pe_`, `crashed_`).
+Checker tests live in `checker_tests/` as `ok_sample.in` + `.out` + `.ans` (prefixes: `ok_`, `wa_`, `pe_`, `crashed_`). Add them even for a standard checker. Polygon rejects a test whose `.out` is empty.
 
 ## Agents (no duplication)
 
