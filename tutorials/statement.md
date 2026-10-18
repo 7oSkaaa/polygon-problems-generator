@@ -50,6 +50,7 @@ Also add a note at the top of the legend: `\textit{This is an interactive proble
 ```latex
 \textbf{After printing each line, flush the output.} For example:
 \begin{itemize}
+    \item \texttt{fflush(stdout)} in C;
     \item \texttt{cout << endl} or \texttt{fflush(stdout)} in C++;
     \item \texttt{System.out.flush()} in Java;
     \item \texttt{sys.stdout.flush()} in Python.

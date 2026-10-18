@@ -99,7 +99,7 @@ The statement file must begin with the problem title before the legend:
 Must include:
 - What the participant reads each round (judge's message format)
 - What the participant outputs each round (query format)
-- Flush reminder with examples: cout << endl or fflush(stdout) in C++, System.out.flush() in Java, sys.stdout.flush() in Python
+- Flush reminder with examples: fflush(stdout) in C, cout << endl or fflush(stdout) in C++, System.out.flush() in Java, sys.stdout.flush() in Python
 - Termination condition (when to stop reading / print final answer)
 
 === OUTPUT ===
@@ -122,6 +122,7 @@ In each step, read one line containing <describe what judge sends>. Then output 
 
 \textbf{After printing each line, flush the output.} For example:
 \begin{itemize}
+    \item \texttt{fflush(stdout)} in C;
     \item \texttt{cout << endl} or \texttt{fflush(stdout)} in C++;
     \item \texttt{System.out.flush()} in Java;
     \item \texttt{sys.stdout.flush()} in Python.

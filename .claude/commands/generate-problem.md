@@ -98,7 +98,7 @@ IMPORTANT: Apply tutorials/polygon-hints.md as a checklist. Use consistent multi
 
 Return the statement in sections: === TITLE === / === LEGEND === / === INPUT === / [=== INTERACTION === if interactive] / === OUTPUT === / === NOTES ===
 The TITLE section must contain only: \textbf{\Large <Problem Name>}
-For interactive problems: add === INTERACTION === between INPUT and OUTPUT. It must describe the per-round protocol, include the flush reminder (cout << endl / System.out.flush() / sys.stdout.flush()), and state the termination condition. Also add \textit{This is an interactive problem. Refer to the Interaction section below for better understanding.} at the start of the LEGEND.
+For interactive problems: add === INTERACTION === between INPUT and OUTPUT. It must describe the per-round protocol, include the flush reminder (fflush(stdout) in C / cout << endl in C++ / System.out.flush() in Java / sys.stdout.flush() in Python), and state the termination condition. Also add \textit{This is an interactive problem. Refer to the Interaction section below for better understanding.} at the start of the LEGEND.
 The NOTES section must explain the provided sample tests. For interactive problems include a two-column tabular (Participant | Judge) showing the sample interaction."
 )
 ```

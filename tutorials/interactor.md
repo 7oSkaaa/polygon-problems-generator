@@ -180,7 +180,7 @@ The problem statement **must** include:
 - Interaction example: a sample interaction showing the back-and-forth
 
 Example statement note:
-> After printing each query, do not forget to flush the output. Use `cout << endl` (C++) or `sys.stdout.flush()` (Python).
+> After printing each query, do not forget to flush the output. Use `fflush(stdout)` (C), `cout << endl` (C++), `System.out.flush()` (Java) or `sys.stdout.flush()` (Python).
 
 ## Polygon setup
 
